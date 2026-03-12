@@ -1,0 +1,46 @@
+:root {
+    --bg: #f0f2f5;
+    --dark-shadow: #d1d9e6;
+    --light-shadow: #ffffff;
+    --accent: #1a1f36;
+}
+
+body { background: var(--bg); font-family: sans-serif; margin: 0; color: var(--accent); }
+
+.app-container { max-width: 400px; margin: 0 auto; padding: 20px; }
+
+.sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 25px; }
+
+.sensor-card {
+    background: var(--bg);
+    padding: 15px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 6px 6px 12px var(--dark-shadow), -6px -6px 12px var(--light-shadow);
+    opacity: 0.9; /* Opacidad según tus preferencias */
+}
+
+.fab {
+    position: fixed;
+    bottom: 35px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-around;
+    padding: 20px;
+}

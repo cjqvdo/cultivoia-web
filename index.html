@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cultivo IA</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="batch-header">
+                <span class="lote-id">LOTE #742</span>
+                <h1>OG Kush <small>• Week 4</small></h1>
+                <span class="badge-vege">VEGETATIVE</span>
+            </div>
+        </header>
+
+        <section class="sensor-grid">
+            <div class="sensor-card">
+                <span class="material-icons-round">thermostat</span>
+                <p>24.2°C</p><small>TEMP</small>
+            </div>
+            <div class="sensor-card">
+                <span class="material-icons-round">water_drop</span>
+                <p>55%</p><small>HUMID</small>
+            </div>
+            <div class="sensor-card">
+                <span class="material-icons-round">air</span>
+                <p>1.2 kPa</p><small>VPD</small>
+            </div>
+        </section>
+
+        <button class="fab" id="btn-add">
+            <span class="material-icons-round">add</span>
+        </button>
+
+        <nav class="bottom-nav">
+            <span class="material-icons-round active">home</span>
+            <span class="material-icons-round">insert_chart</span>
+            <span class="material-icons-round">chat_bubble</span>
+            <span class="material-icons-round">settings</span>
+        </nav>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
