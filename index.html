@@ -1,49 +1,58 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cultivo IA</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cultivo IA - Recovery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #F0F2F5;
+            --text-main: #1B2B41;
+            --text-secondary: #6B7280;
+            --shadow-dark: rgba(163, 177, 198, 0.5);
+            --shadow-light: rgba(255, 255, 255, 0.8);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container { width: 100%; max-width: 400px; padding: 20px; text-align: center; }
+        .logo-wrapper { width: 180px; margin: 0 auto 10px auto; mix-blend-mode: multiply; }
+        .app-logo { width: 100%; height: auto; opacity: 0.8; filter: contrast(1.1) brightness(1.05); }
+        h1 {
+            font-size: 38px; font-weight: 100; letter-spacing: -0.05em; line-height: 1.1; margin-bottom: 8px;
+            background: linear-gradient(180deg, #1B2B41 0%, #4B5563 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .subtitle { font-size: 14px; font-weight: 300; color: var(--text-secondary); margin-bottom: 40px; opacity: 0.6; }
+        .selection-grid { display: flex; flex-direction: column; gap: 25px; }
+        .card {
+            background: var(--bg-color); border-radius: 35px; padding: 45px 20px; text-decoration: none;
+            color: var(--text-main); display: flex; flex-direction: column; align-items: center; gap: 15px;
+            box-shadow: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+        .card:active { box-shadow: inset 8px 8px 16px var(--shadow-dark), inset -8px -8px 16px var(--shadow-light); transform: scale(0.97); }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <header class="header">
-            <div class="batch-header">
-                <span class="lote-id">LOTE #742</span>
-                <h1>OG Kush <small>• Week 4</small></h1>
-                <span class="badge-vege">VEGETATIVE</span>
-            </div>
-        </header>
-
-        <section class="sensor-grid">
-            <div class="sensor-card">
-                <span class="material-icons-round">thermostat</span>
-                <p>24.2°C</p><small>TEMP</small>
-            </div>
-            <div class="sensor-card">
-                <span class="material-icons-round">water_drop</span>
-                <p>55%</p><small>HUMID</small>
-            </div>
-            <div class="sensor-card">
-                <span class="material-icons-round">air</span>
-                <p>1.2 kPa</p><small>VPD</small>
-            </div>
-        </section>
-
-        <button class="fab" id="btn-add">
-            <span class="material-icons-round">add</span>
-        </button>
-
-        <nav class="bottom-nav">
-            <span class="material-icons-round active">home</span>
-            <span class="material-icons-round">insert_chart</span>
-            <span class="material-icons-round">chat_bubble</span>
-            <span class="material-icons-round">settings</span>
-        </nav>
+    <div class="container">
+        <div class="logo-wrapper">
+            <img src="logotipo.png" alt="Cultivo IA" class="app-logo">
+        </div>
+        <h1>Choose environment</h1>
+        <p class="subtitle">precision growth optimization</p>
+        <div class="selection-grid">
+            <a href="#" class="card"><i data-lucide="home" size="36"></i><span>Indoor</span></a>
+            <a href="#" class="card"><i data-lucide="sun" size="36"></i><span>Outdoor</span></a>
+        </div>
     </div>
-    <script src="app.js"></script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>

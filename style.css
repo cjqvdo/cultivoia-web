@@ -1,46 +1,100 @@
+/* CONFIGURACIÓN BASE */
 :root {
-    --bg: #f0f2f5;
-    --dark-shadow: #d1d9e6;
-    --light-shadow: #ffffff;
-    --accent: #1a1f36;
+    --bg-color: #F0F2F5;
+    --text-main: #1B2B41;
+    --text-secondary: #6B7280;
+    --shadow-dark: rgba(163, 177, 198, 0.5);
+    --shadow-light: rgba(255, 255, 255, 0.8);
 }
 
-body { background: var(--bg); font-family: sans-serif; margin: 0; color: var(--accent); }
-
-.app-container { max-width: 400px; margin: 0 auto; padding: 20px; }
-
-.sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 25px; }
-
-.sensor-card {
-    background: var(--bg);
-    padding: 15px;
-    border-radius: 20px;
-    text-align: center;
-    box-shadow: 6px 6px 12px var(--dark-shadow), -6px -6px 12px var(--light-shadow);
-    opacity: 0.9; /* Opacidad según tus preferencias */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
 }
 
-.fab {
-    position: fixed;
-    bottom: 35px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: white;
-    border: none;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    cursor: pointer;
-}
-
-.bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: rgba(255,255,255,0.8);
-    backdrop-filter: blur(10px);
+body {
+    background-color: var(--bg-color);
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--text-main);
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 400px;
     padding: 20px;
+    text-align: center;
+}
+
+/* LOGO Y TÍTULOS */
+.logo-wrapper {
+    width: 180px;
+    margin: 0 auto 10px auto;
+    mix-blend-mode: multiply; 
+}
+
+.app-logo {
+    width: 100%;
+    height: auto;
+    opacity: 0.8;
+    filter: contrast(1.1) brightness(1.05);
+}
+
+h1 {
+    font-size: 38px;
+    font-weight: 100;
+    letter-spacing: -0.05em;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    background: linear-gradient(180deg, #1B2B41 0%, #4B5563 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+    margin-bottom: 40px;
+    opacity: 0.6;
+}
+
+/* BOTONES NEUMÓRFICOS */
+.selection-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.card {
+    background: var(--bg-color);
+    border-radius: 35px;
+    padding: 45px 20px;
+    text-decoration: none;
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 12px 12px 24px var(--shadow-dark), 
+                -12px -12px 24px var(--shadow-light);
+    transition: all 0.3s ease;
+}
+
+.card:active {
+    box-shadow: inset 8px 8px 16px var(--shadow-dark), 
+                inset -8px -8px 16px var(--shadow-light);
+    transform: scale(0.97);
+}
+
+.card span {
+    font-size: 19px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
 }
