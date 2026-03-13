@@ -17,42 +17,72 @@
             --shadow-light: rgba(255, 255, 255, 0.8);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        
         body {
             background-color: var(--bg-color);
             font-family: 'Inter', -apple-system, sans-serif;
-            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            display: flex; justify-content: center; min-height: 100vh;
+            /* Eliminamos align-items: center para que el scroll de los formularios sea natural */
+            padding-top: 60px; 
         }
-        .container { width: 100%; max-width: 400px; padding: 20px; text-align: center; }
+
+        .container { width: 100%; max-width: 420px; padding: 20px; text-align: center; }
+        
+        /* Contenedor del Logo: Se desvanece suavemente cuando empieza el flujo */
+        #header-branding { transition: all 0.5s ease; }
         .logo-wrapper { width: 180px; margin: 0 auto 10px auto; mix-blend-mode: multiply; }
         .app-logo { width: 100%; height: auto; opacity: 0.8; filter: contrast(1.1) brightness(1.05); }
+        
         h1 {
             font-size: 38px; font-weight: 100; letter-spacing: -0.05em; line-height: 1.1; margin-bottom: 8px;
             background: linear-gradient(180deg, #1B2B41 0%, #4B5563 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
+        
         .subtitle { font-size: 14px; font-weight: 300; color: var(--text-secondary); margin-bottom: 40px; opacity: 0.6; }
+
+        /* Mantenemos tu Selection Grid tal cual */
         .selection-grid { display: flex; flex-direction: column; gap: 25px; }
+        
+        /* Mantenemos tus Cards idénticas */
         .card {
             background: var(--bg-color); border-radius: 35px; padding: 45px 20px; text-decoration: none;
             color: var(--text-main); display: flex; flex-direction: column; align-items: center; gap: 15px;
             box-shadow: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
             transition: all 0.3s ease;
+            cursor: pointer;
         }
         .card:active { box-shadow: inset 8px 8px 16px var(--shadow-dark), inset -8px -8px 16px var(--shadow-light); transform: scale(0.97); }
+        
+        /* Animación de entrada para los nuevos formularios */
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo-wrapper">
-            <img src="logotipo.png" alt="Cultivo IA" class="app-logo">
+        <div id="header-branding">
+            <div class="logo-wrapper">
+                <img src="logotipo.png" alt="Cultivo IA" class="app-logo">
+            </div>
+            <h1>Choose environment</h1>
+            <p class="subtitle">precision growth optimization</p>
         </div>
-        <h1>Choose environment</h1>
-        <p class="subtitle">precision growth optimization</p>
-        <div class="selection-grid">
-            <a href="#" class="card"><i data-lucide="home" size="36"></i><span>Indoor</span></a>
-            <a href="#" class="card"><i data-lucide="sun" size="36"></i><span>Outdoor</span></a>
+
+        <div id="app-viewport" class="fade-in">
+            <div class="selection-grid">
+                <div class="card" onclick="startOnboarding('indoor')">
+                    <i data-lucide="home" size="36"></i>
+                    <span>Indoor</span>
+                </div>
+                <div class="card" onclick="startOnboarding('outdoor')">
+                    <i data-lucide="sun" size="36"></i>
+                    <span>Outdoor</span>
+                </div>
+            </div>
         </div>
     </div>
+    <script src="app.js"></script>
     <script>lucide.createIcons();</script>
 </body>
 </html>

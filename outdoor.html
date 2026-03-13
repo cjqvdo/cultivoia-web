@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cultivo IA - Outdoor</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --bg-color: #F0F2F5;
+            --text-main: #1B2B41;
+            --text-sec: #6B7280;
+            --text-hint: #9CA3AF;
+            --shadow-hollow-dark: rgba(163, 177, 198, 0.6);
+            --shadow-hollow-light: rgba(255, 255, 255, 0.9);
+            --shadow-block-dark: rgba(163, 177, 198, 0.3);
+            --shadow-block-light: rgba(255, 255, 255, 0.6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 10px 0 120px 0;
+        }
+
+        .container { width: 100%; max-width: 420px; }
+        header { margin-bottom: 30px; text-align: center; }
+        h1 { font-size: 34px; font-weight: 100; letter-spacing: -0.05em; }
+
+        .section-card {
+            background: var(--bg-color);
+            border-radius: 28px;
+            padding: 22px;
+            margin-bottom: 25px;
+            box-shadow: 10px 10px 20px var(--shadow-block-dark), -10px -10px 20px var(--shadow-block-light);
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-sec);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center; gap: 8px;
+        }
+
+        .field { margin-bottom: 20px; }
+        .label { font-size: 11px; font-weight: 600; color: var(--text-sec); margin-bottom: 8px; display: block; padding-left: 5px; }
+        
+        .input-h {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 15px;
+            background: var(--bg-color);
+            border: none;
+            border-radius: 16px;
+            color: var(--text-main);
+            box-shadow: inset 4px 4px 8px var(--shadow-hollow-dark), inset -4px -4px 8px var(--shadow-hollow-light);
+            outline: none;
+            font-family: 'Inter';
+        }
+
+        textarea.input-h { height: 120px; resize: none; }
+
+        .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .pill {
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: 4px 4px 8px var(--shadow-block-dark), -4px -4px 8px var(--shadow-block-light);
+            cursor: pointer;
+            color: var(--text-sec);
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .pill.active {
+            box-shadow: inset 3px 3px 6px var(--shadow-hollow-dark), inset -3px -3px 6px var(--shadow-hollow-light);
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn-primary {
+            width: 100%;
+            padding: 20px;
+            background: var(--bg-color);
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            box-shadow: 12px 12px 24px var(--shadow-block-dark), -12px -12px 24px var(--shadow-block-light);
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-primary:active {
+            box-shadow: inset 6px 6px 12px var(--shadow-block-dark), inset -6px -6px 12px var(--shadow-block-light);
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Outdoor</h1>
+        </header>
+
+        <form id="outdoorForm">
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="droplet"></i> Input Nutrition</h2>
+                <div class="field">
+                    <label class="label">INPUT VOLUME L</label>
+                    <input type="number" step="0.1" id="volumen_entrada" class="input-h" placeholder="0.0 L">
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label class="label">INPUT PH</label>
+                        <input type="number" step="0.01" id="ph_entrada" class="input-h" placeholder="0.0">
+                    </div>
+                    <div class="field">
+                        <label class="label">INPUT EC mS/cm</label>
+                        <input type="number" step="0.01" id="ec_entrada" class="input-h" placeholder="0.0 mS/cm">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="refresh-cw"></i> Runoff / Drainage</h2>
+                <div class="field">
+                    <label class="label">RUNOFF VOLUME L</label>
+                    <input type="number" step="0.1" id="volumen_drenaje" class="input-h" placeholder="0.0 L">
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label class="label">RUNOFF PH</label>
+                        <input type="number" step="0.01" id="ph_drenaje" class="input-h" placeholder="0.0">
+                    </div>
+                    <div class="field">
+                        <label class="label">RUNOFF EC mS/cm</label>
+                        <input type="number" step="0.01" id="ec_drenaje" class="input-h" placeholder="0.0 mS/cm">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="activity"></i> Plant Analysis</h2>
+                <div class="field">
+                    <label class="label">BRIX °Bx</label>
+                    <input type="number" step="0.1" id="brix" class="input-h" placeholder="0.0 °Bx">
+                </div>
+                <div class="field">
+                    <label class="label">BRIX SHARPNESS</label>
+                    <div class="pill-group" data-id="nitidez_brix">
+                        <div class="pill active" data-val="sharp">sharp</div>
+                        <div class="pill" data-val="gradient">gradient</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="message-square"></i> Daily Report</h2>
+                <div class="field">
+                    <label class="label">OBSERVATIONS</label>
+                    <textarea id="observaciones" class="input-h" placeholder="E.g., Turgidity, color and angle of leaves, color and shape of trichomes and pistils, spots, pests, observable soil microbiology, etc."></textarea>
+                </div>
+                <div class="field">
+                    <label class="label">DEVIATION</label>
+                    <textarea id="desvio" class="input-h" placeholder="Anomalies or corrective actions..."></textarea>
+                </div>
+            </div>
+
+            <button type="button" class="btn-primary" onclick="handleSave()">Save Outdoor log</button>
+        </form>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        document.querySelectorAll('.pill-group .pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                const group = pill.closest('.pill-group');
+                group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+            });
+        });
+
+        function handleSave() {
+            const getActivePill = (groupId) => {
+                const active = document.querySelector(`.pill-group[data-id="${groupId}"] .pill.active`);
+                return active ? active.getAttribute('data-val') : null;
+            };
+
+            const payload = {
+                volumen_entrada: parseFloat(document.getElementById('volumen_entrada').value) || 0,
+                ph_entrada: parseFloat(document.getElementById('ph_entrada').value) || 0,
+                ec_entrada: parseFloat(document.getElementById('ec_entrada').value) || 0,
+                volumen_drenaje: parseFloat(document.getElementById('volumen_drenaje').value) || 0,
+                ph_drenaje: parseFloat(document.getElementById('ph_drenaje').value) || 0,
+                ec_drenaje: parseFloat(document.getElementById('ec_drenaje').value) || 0,
+                brix: parseFloat(document.getElementById('brix').value) || 0,
+                nitidez_brix: getActivePill('nitidez_brix'),
+                observaciones: document.getElementById('observaciones').value,
+                desvio: document.getElementById('desvio').value
+            };
+            
+            // Notificación al orquestador central app.js
+            if (typeof handleStepSave === 'function') {
+                handleStepSave(payload);
+            } else {
+                console.log("Local Test Data (Outdoor):", payload);
+            }
+        }
+    </script>
+</body>
+</html>

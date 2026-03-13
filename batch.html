@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cultivo IA - New Batch</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --bg-color: #F0F2F5;
+            --text-main: #1B2B41;
+            --text-sec: #6B7280;
+            --shadow-hollow-dark: rgba(163, 177, 198, 0.6);
+            --shadow-hollow-light: rgba(255, 255, 255, 0.9);
+            --shadow-block-dark: rgba(163, 177, 198, 0.3);
+            --shadow-block-light: rgba(255, 255, 255, 0.6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 10px 0 120px 0; /* Ajustado para el orquestador */
+        }
+
+        .container { width: 100%; max-width: 420px; }
+        header { margin-bottom: 30px; text-align: center; }
+        h1 { font-size: 34px; font-weight: 100; letter-spacing: -0.05em; }
+
+        .section-card {
+            background: var(--bg-color);
+            border-radius: 28px;
+            padding: 22px;
+            margin-bottom: 25px;
+            box-shadow: 10px 10px 20px var(--shadow-block-dark), -10px -10px 20px var(--shadow-block-light);
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-sec);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center; gap: 8px;
+        }
+
+        .field { margin-bottom: 20px; }
+        .label { font-size: 11px; font-weight: 600; color: var(--text-sec); margin-bottom: 8px; display: block; padding-left: 5px; }
+        .sub-label { font-size: 9px; font-weight: 700; color: var(--text-sec); text-align: center; text-transform: uppercase; margin-bottom: 5px; opacity: 0.7; }
+
+        .input-h {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 15px;
+            background: var(--bg-color);
+            border: none;
+            border-radius: 16px;
+            color: var(--text-main);
+            box-shadow: inset 4px 4px 8px var(--shadow-hollow-dark), inset -4px -4px 8px var(--shadow-hollow-light);
+            outline: none;
+            font-family: 'Inter';
+        }
+
+        .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .pill {
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: 4px 4px 8px var(--shadow-block-dark), -4px -4px 8px var(--shadow-block-light);
+            cursor: pointer;
+            color: var(--text-sec);
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .pill.active {
+            box-shadow: inset 3px 3px 6px var(--shadow-hollow-dark), inset -3px -3px 6px var(--shadow-hollow-light);
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn-primary {
+            width: 100%;
+            padding: 20px;
+            background: var(--bg-color);
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            box-shadow: 12px 12px 24px var(--shadow-block-dark), -12px -12px 24px var(--shadow-block-light);
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-primary:active {
+            box-shadow: inset 6px 6px 12px var(--shadow-block-dark), inset -6px -6px 12px var(--shadow-block-light);
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Batch</h1>
+        </header>
+
+        <form id="batchForm">
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="tag"></i> Identification</h2>
+                <div class="field">
+                    <label class="label">BATCH NAME</label>
+                    <input type="text" id="nombre_del_lote" class="input-h" placeholder="e.g., lt-2026-01">
+                </div>
+                <div class="field">
+                    <label class="label">STATUS</label>
+                    <div class="pill-group" data-id="estado_del_lote">
+                        <div class="pill active" data-val="active">active</div>
+                        <div class="pill" data-val="closed">closed</div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">VARIETY</label>
+                    <div class="pill-group" data-id="variedad">
+                        <div class="pill active" data-val="photoperiod">photoperiod</div>
+                        <div class="pill" data-val="autoflower">autoflower</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="map-pin"></i> Location</h2>
+                <div class="grid-2">
+                    <div class="field">
+                        <label class="label">COUNTRY</label>
+                        <input type="text" id="country" class="input-h" placeholder="Country">
+                    </div>
+                    <div class="field">
+                        <label class="label">STATE / PROV.</label>
+                        <input type="text" id="state_province" class="input-h" placeholder="State">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">CITY</label>
+                    <input type="text" id="city" class="input-h" placeholder="City name">
+                </div>
+                <div class="field">
+                    <label class="label">GPS COORDINATES</label>
+                    <input type="text" id="gps_coordinates" class="input-h" placeholder="00.0000, -00.0000">
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="settings"></i> Configuration</h2>
+                <div class="field">
+                    <label class="label">CULTIVATION TYPE</label>
+                    <div class="pill-group" data-id="tipo_de_cultivo">
+                        <div class="pill active" data-val="hydroponics">hydroponics</div>
+                        <div class="pill" data-val="living soil">living soil</div>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label class="label">PLANTS (QTY)</label>
+                        <input type="number" id="cantidad_de_plantas" class="input-h" value="0">
+                    </div>
+                    <div class="field">
+                        <label class="label">POTS (QTY)</label>
+                        <input type="number" id="cantidad_de_macetas" class="input-h" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="dna"></i> Genetics</h2>
+                <div class="field">
+                    <label class="label">GENETIC NAME</label>
+                    <input type="text" id="genetica" class="input-h" placeholder="e.g., Amnesia Haze">
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label class="label">PROVIDER</label>
+                        <input type="text" id="proveedor" class="input-h" placeholder="Supplier">
+                    </div>
+                    <div class="field">
+                        <label class="label">BANK</label>
+                        <input type="text" id="banco" class="input-h" placeholder="Breeder">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">PREDOMINANCE</label>
+                    <div class="pill-group" data-id="predominancia_genetica">
+                        <div class="pill active" data-val="sativa">sativa</div>
+                        <div class="pill" data-val="indica">indica</div>
+                        <div class="pill" data-val="hybrid">hybrid</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="trending-up"></i> Expectations</h2>
+                <div class="grid-2">
+                    <div class="field">
+                        <label class="label">INDOOR SIZE</label>
+                        <input type="text" id="tamano_esperado_indoor" class="input-h" placeholder="S-M-L">
+                    </div>
+                    <div class="field">
+                        <label class="label">OUTDOOR SIZE</label>
+                        <input type="text" id="tamano_esperado_outdoor" class="input-h" placeholder="S-M-L">
+                    </div>
+                    <div class="field">
+                        <label class="label">INDOOR YIELD</label>
+                        <input type="text" id="produccion_esperada_indoor" class="input-h" placeholder="g/m2">
+                    </div>
+                    <div class="field">
+                        <label class="label">OUTDOOR YIELD</label>
+                        <input type="text" id="produccion_esperada_outdoor" class="input-h" placeholder="g/plant">
+                    </div>
+                    <div class="field">
+                        <label class="label">THC (%)</label>
+                        <input type="number" step="0.1" id="thc_esperado" class="input-h" placeholder="0.0">
+                    </div>
+                    <div class="field">
+                        <label class="label">CBD (%)</label>
+                        <input type="number" step="0.1" id="cbd_esperado" class="input-h" placeholder="0.0">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">FLOWERING TIME</label>
+                    <input type="text" id="tiempo_floracion_esperada" class="input-h" placeholder="e.g., 9 weeks">
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="calendar"></i> Chronology</h2>
+                <div class="field"><label class="label">GERMINATION DATE</label><input type="date" id="fecha_de_germinacion_esqueje" class="input-h"></div>
+                <div class="field"><label class="label">TRANSPLANT DATE</label><input type="date" id="pase_a_sustrato" class="input-h"></div>
+                <div class="field"><label class="label">FLIP DATE (12/12)</label><input type="date" id="fecha_del_flip" class="input-h"></div>
+                <div class="field"><label class="label">BULKING DATE</label><input type="date" id="fecha_engorde" class="input-h"></div>
+                <div class="field"><label class="label">HARVEST DATE</label><input type="date" id="fecha_cosecha" class="input-h"></div>
+                <div class="field"><label class="label">CURING START</label><input type="date" id="fecha_inicio_curado" class="input-h"></div>
+                <div class="field"><label class="label">CLOSING DATE</label><input type="date" id="fecha_cierre" class="input-h"></div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="target"></i> Optimal Targets</h2>
+                
+                <div class="grid-2" style="margin-bottom: 10px;">
+                    <div class="sub-label">Vegetative</div>
+                    <div class="sub-label">Flowering</div>
+                </div>
+
+                <div class="field">
+                    <label class="label">TARGET VPD (Min / Max)</label>
+                    <div class="grid-2">
+                        <div class="grid-2">
+                            <input type="number" step="0.1" id="opt_vpd_vege_min" class="input-h" placeholder="0.8">
+                            <input type="number" step="0.1" id="opt_vpd_vege_max" class="input-h" placeholder="1.1">
+                        </div>
+                        <div class="grid-2">
+                            <input type="number" step="0.1" id="opt_vpd_flora_min" class="input-h" placeholder="1.2">
+                            <input type="number" step="0.1" id="opt_vpd_flora_max" class="input-h" placeholder="1.5">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">TARGET HUMIDITY (Min / Max)</label>
+                    <div class="grid-2">
+                        <div class="grid-2">
+                            <input type="number" id="opt_hum_vege_min" class="input-h" placeholder="60">
+                            <input type="number" id="opt_hum_vege_max" class="input-h" placeholder="80">
+                        </div>
+                        <div class="grid-2">
+                            <input type="number" id="opt_hum_flora_min" class="input-h" placeholder="40">
+                            <input type="number" id="opt_hum_flora_max" class="input-h" placeholder="55">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">DAY TEMP (Min / Max)</label>
+                    <div class="grid-2">
+                        <div class="grid-2">
+                            <input type="number" id="opt_temp_vege_min" class="input-h" placeholder="22">
+                            <input type="number" id="opt_temp_vege_max" class="input-h" placeholder="28">
+                        </div>
+                        <div class="grid-2">
+                            <input type="number" id="opt_temp_flora_min" class="input-h" placeholder="20">
+                            <input type="number" id="opt_temp_flora_max" class="input-h" placeholder="26">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="grid-2">
+                        <label class="label">TARGET EC (VEGE / FLORA)</label>
+                        <label class="label">TARGET PH (VEGE / FLORA)</label>
+                    </div>
+                    <div class="grid-2">
+                        <div class="grid-2">
+                            <input type="number" step="0.1" id="opt_ec_vege" class="input-h" placeholder="1.2">
+                            <input type="number" step="0.1" id="opt_ec_flora" class="input-h" placeholder="1.8">
+                        </div>
+                        <div class="grid-2">
+                            <input type="number" step="0.1" id="opt_ph_vege" class="input-h" placeholder="5.8">
+                            <input type="number" step="0.1" id="opt_ph_flora" class="input-h" placeholder="6.2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-primary" onclick="submitForm()">Save Batch</button>
+        </form>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        document.querySelectorAll('.pill-group .pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                const group = pill.closest('.pill-group');
+                group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+            });
+        });
+
+        function submitForm() {
+            const getVal = (id, fallback) => document.getElementById(id).value || fallback;
+            const getActivePill = (id) => {
+                const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
+                return active ? active.dataset.val : null;
+            };
+
+            const formData = {
+                nombre_del_lote: document.getElementById('nombre_del_lote').value,
+                estado_del_lote: getActivePill('estado_del_lote'),
+                variedad: getActivePill('variedad'),
+                country: document.getElementById('country').value,
+                state_province: document.getElementById('state_province').value,
+                city: document.getElementById('city').value,
+                gps_coordinates: document.getElementById('gps_coordinates').value,
+                tipo_de_cultivo: getActivePill('tipo_de_cultivo'),
+                cantidad_de_plantas: document.getElementById('cantidad_de_plantas').value,
+                cantidad_de_macetas: document.getElementById('cantidad_de_macetas').value,
+                
+                // Optimal Targets - VEGE
+                opt_vpd_vege_min: getVal('opt_vpd_vege_min', 0.8),
+                opt_vpd_vege_max: getVal('opt_vpd_vege_max', 1.1),
+                opt_hum_vege_min: getVal('opt_hum_vege_min', 60),
+                opt_hum_vege_max: getVal('opt_hum_vege_max', 80),
+                opt_temp_vege_min: getVal('opt_temp_vege_min', 22),
+                opt_temp_vege_max: getVal('opt_temp_vege_max', 28),
+                opt_ec_vege: getVal('opt_ec_vege', 1.2),
+                opt_ph_vege: getVal('opt_ph_vege', 5.8),
+
+                // Optimal Targets - FLORA
+                opt_vpd_flora_min: getVal('opt_vpd_flora_min', 1.2),
+                opt_vpd_flora_max: getVal('opt_vpd_flora_max', 1.5),
+                opt_hum_flora_min: getVal('opt_hum_flora_min', 40),
+                opt_hum_flora_max: getVal('opt_hum_flora_max', 55),
+                opt_temp_flora_min: getVal('opt_temp_flora_min', 20),
+                opt_temp_flora_max: getVal('opt_temp_flora_max', 26),
+                opt_ec_flora: getVal('opt_ec_flora', 1.8),
+                opt_ph_flora: getVal('opt_ph_flora', 6.2),
+
+                genetica: document.getElementById('genetica').value,
+                proveedor: document.getElementById('proveedor').value,
+                banco: document.getElementById('banco').value,
+                predominancia_genetica: getActivePill('predominancia_genetica'),
+                tamano_esperado_indoor: document.getElementById('tamano_esperado_indoor').value,
+                tamano_esperado_outdoor: document.getElementById('tamano_esperado_outdoor').value,
+                produccion_esperada_indoor: document.getElementById('produccion_esperada_indoor').value,
+                produccion_esperada_outdoor: document.getElementById('produccion_esperada_outdoor').value,
+                thc_esperado: document.getElementById('thc_esperado').value,
+                cbd_esperado: document.getElementById('cbd_esperado').value,
+                tiempo_floracion_esperada: document.getElementById('tiempo_floracion_esperada').value,
+                
+                fecha_de_germinacion_esqueje: document.getElementById('fecha_de_germinacion_esqueje').value,
+                pase_a_sustrato: document.getElementById('pase_a_sustrato').value,
+                fecha_del_flip: document.getElementById('fecha_del_flip').value,
+                fecha_engorde: document.getElementById('fecha_engorde').value,
+                fecha_cosecha: document.getElementById('fecha_cosecha').value,
+                fecha_inicio_curado: document.getElementById('fecha_inicio_curado').value,
+                fecha_cierre: document.getElementById('fecha_cierre').value
+            };
+
+            // Notificamos al orquestador (app.js)
+            if (typeof handleStepSave === 'function') {
+                handleStepSave(formData);
+            } else {
+                console.log("Local Test Data:", formData);
+            }
+        }
+    </script>
+</body>
+</html>
