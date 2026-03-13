@@ -22,13 +22,11 @@
             background-color: var(--bg-color);
             font-family: 'Inter', -apple-system, sans-serif;
             display: flex; justify-content: center; min-height: 100vh;
-            /* Eliminamos align-items: center para que el scroll de los formularios sea natural */
             padding-top: 60px; 
         }
 
         .container { width: 100%; max-width: 420px; padding: 20px; text-align: center; }
         
-        /* Contenedor del Logo: Se desvanece suavemente cuando empieza el flujo */
         #header-branding { transition: all 0.5s ease; }
         .logo-wrapper { width: 180px; margin: 0 auto 10px auto; mix-blend-mode: multiply; }
         .app-logo { width: 100%; height: auto; opacity: 0.8; filter: contrast(1.1) brightness(1.05); }
@@ -41,10 +39,8 @@
         
         .subtitle { font-size: 14px; font-weight: 300; color: var(--text-secondary); margin-bottom: 40px; opacity: 0.6; }
 
-        /* Mantenemos tu Selection Grid tal cual */
         .selection-grid { display: flex; flex-direction: column; gap: 25px; }
         
-        /* Mantenemos tus Cards idénticas */
         .card {
             background: var(--bg-color); border-radius: 35px; padding: 45px 20px; text-decoration: none;
             color: var(--text-main); display: flex; flex-direction: column; align-items: center; gap: 15px;
@@ -54,7 +50,6 @@
         }
         .card:active { box-shadow: inset 8px 8px 16px var(--shadow-dark), inset -8px -8px 16px var(--shadow-light); transform: scale(0.97); }
         
-        /* Animación de entrada para los nuevos formularios */
         .fade-in { animation: fadeIn 0.5s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -82,14 +77,13 @@
             </div>
         </div>
     </div>
-   <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="app.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
     <script>
-        lucide.createIcons();
+        // Inicialización de iconos
+        if (window.lucide) lucide.createIcons();
     </script>
 </body>
 </html>

@@ -6,26 +6,48 @@ const state = {
     environment: null, // 'indoor' o 'outdoor'
     currentStep: 0,
     steps: ['batch.html', 'infrastructure.html', 'supplies.html', 'setup_detail'],
-    formData: {} // Aquí se irá acumulando todo antes de enviar a Supabase
+    formData: {
+        id_lote: null // Aquí guardaremos el ID que nos devuelva Supabase
+    } 
 };
 
 /**
- * Inicia el flujo de configuración inicial
+ * Inicia el flujo y registra el ambiente en la tabla 'lotes' de Supabase
  */
-function startOnboarding(type) {
+async function startOnboarding(type) {
     state.environment = type;
     
     // Ajustamos el último paso según la elección del entorno
     state.steps[3] = (type === 'indoor') ? 'indoor.html' : 'outdoor.html';
 
-    // Efecto visual: Ocultamos el branding para centrar la atención en los inputs
-    const header = document.getElementById('header-branding');
-    if (header) {
-        header.style.opacity = '0';
-        setTimeout(() => {
-            header.style.display = 'none';
-            loadNextStep();
-        }, 300);
+    try {
+        // Registro inicial en Supabase
+        // IMPORTANTE: Asegúrate que la columna se llame 'espacio' en tu tabla 'lotes'
+        const { data, error } = await supabase
+            .from('lotes')
+            .insert([{ espacio: type }])
+            .select();
+
+        if (error) throw error;
+
+        // Guardamos el ID generado (en tu captura se ve como 'id del lote')
+        // Si en la DB el nombre tiene espacios, se accede así: data[0]['id del lote']
+        state.formData.id_lote = data[0]['id del lote'] || data[0].id;
+        console.log("Registro exitoso. ID del Lote:", state.formData.id_lote);
+
+        // Efecto visual: Ocultamos el branding
+        const header = document.getElementById('header-branding');
+        if (header) {
+            header.style.opacity = '0';
+            setTimeout(() => {
+                header.style.display = 'none';
+                loadNextStep();
+            }, 300);
+        }
+
+    } catch (error) {
+        console.error("Error de conexión con Supabase:", error.message);
+        alert("No se pudo iniciar el registro. Revisa la consola.");
     }
 }
 
@@ -36,13 +58,10 @@ async function loadNextStep() {
     const viewport = document.getElementById('app-viewport');
     const nextFile = state.steps[state.currentStep];
 
-    // Animación de salida
     viewport.style.opacity = '0';
     viewport.style.transform = 'translateY(10px)';
 
     try {
-        // En Google Apps Script (entorno real), usaremos una función específica
-        // Para desarrollo local o pruebas, usamos fetch
         const response = await fetch(nextFile);
         if (!response.ok) throw new Error('Error al cargar ' + nextFile);
         
@@ -50,11 +69,8 @@ async function loadNextStep() {
         
         setTimeout(() => {
             viewport.innerHTML = html;
-            
-            // Reiniciamos los iconos de Lucide para el contenido nuevo
             if (window.lucide) lucide.createIcons();
             
-            // Animación de entrada
             viewport.style.opacity = '1';
             viewport.style.transform = 'translateY(0)';
             
@@ -63,20 +79,17 @@ async function loadNextStep() {
 
     } catch (error) {
         console.error("Critical Error:", error);
-        viewport.innerHTML = `<div class="card"><p>Error al cargar el módulo.</p></div>`;
+        viewport.innerHTML = `<div class="card"><p>Error al cargar el módulo ${nextFile}.</p></div>`;
         viewport.style.opacity = '1';
     }
 }
 
 /**
- * Función puente que recibiría los datos de cada formulario individual
- * Debes llamar a esta función desde el 'submitForm' de cada archivo .html
+ * Recibe los datos de cada formulario y los acumula
  */
 function handleStepSave(data) {
-    // Mergeamos los datos nuevos con los que ya teníamos
     state.formData = { ...state.formData, ...data };
-    
-    console.log(`Paso ${state.currentStep} completado. Datos actuales:`, state.formData);
+    console.log(`Paso ${state.currentStep} guardado localmente:`, state.formData);
 
     if (state.currentStep < state.steps.length) {
         loadNextStep();
@@ -86,7 +99,7 @@ function handleStepSave(data) {
 }
 
 /**
- * Finaliza el onboarding y debería redirigir al Dashboard principal
+ * Finaliza el onboarding
  */
 function finalizeSetup() {
     const viewport = document.getElementById('app-viewport');
@@ -102,7 +115,4 @@ function finalizeSetup() {
     `;
     
     if (window.lucide) lucide.createIcons();
-    
-    // Aquí es donde en el futuro llamarás a:
-    // google.script.run.withSuccessHandler(showDashboard).saveAllData(state.formData);
 }
