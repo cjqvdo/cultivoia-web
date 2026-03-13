@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cultivo IA - Finance</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --bg-color: #F0F2F5;
+            --text-main: #1B2B41;
+            --text-sec: #6B7280;
+            --shadow-hollow-dark: rgba(163, 177, 198, 0.6);
+            --shadow-hollow-light: rgba(255, 255, 255, 0.9);
+            --shadow-block-dark: rgba(163, 177, 198, 0.3);
+            --shadow-block-light: rgba(255, 255, 255, 0.6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 10px 0 120px 0;
+        }
+
+        .container { width: 100%; max-width: 420px; }
+        header { margin-bottom: 30px; text-align: center; }
+        h1 { font-size: 34px; font-weight: 100; letter-spacing: -0.05em; }
+
+        .section-card {
+            background: var(--bg-color);
+            border-radius: 28px;
+            padding: 22px;
+            margin-bottom: 25px;
+            box-shadow: 10px 10px 20px var(--shadow-block-dark), -10px -10px 20px var(--shadow-block-light);
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-sec);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center; gap: 8px;
+        }
+
+        .field { margin-bottom: 20px; }
+        .label { font-size: 11px; font-weight: 600; color: var(--text-sec); margin-bottom: 8px; display: block; padding-left: 5px; }
+
+        .input-h {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 15px;
+            background: var(--bg-color);
+            border: none;
+            border-radius: 16px;
+            color: var(--text-main);
+            box-shadow: inset 4px 4px 8px var(--shadow-hollow-dark), inset -4px -4px 8px var(--shadow-hollow-light);
+            outline: none;
+            font-family: 'Inter';
+        }
+
+        .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .pill {
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: 4px 4px 8px var(--shadow-block-dark), -4px -4px 8px var(--shadow-block-light);
+            cursor: pointer;
+            color: var(--text-sec);
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .pill.active {
+            box-shadow: inset 3px 3px 6px var(--shadow-hollow-dark), inset -3px -3px 6px var(--shadow-hollow-light);
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn-primary {
+            width: 100%;
+            padding: 20px;
+            background: var(--bg-color);
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            box-shadow: 12px 12px 24px var(--shadow-block-dark), -12px -12px 24px var(--shadow-block-light);
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-primary:active {
+            box-shadow: inset 6px 6px 12px var(--shadow-block-dark), inset -6px -6px 12px var(--shadow-block-light);
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Finance</h1>
+        </header>
+
+        <form id="finanzasForm">
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="shopping-bag"></i> Item Details</h2>
+                <div class="field">
+                    <label class="label">ITEM NAME</label>
+                    <input type="text" id="nombre_item" class="input-h" placeholder="e.g., LED Panel, Nutrients">
+                </div>
+                <div class="field">
+                    <label class="label">DESCRIPTION</label>
+                    <input type="text" id="descripcion" class="input-h" placeholder="Short details">
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="pie-chart"></i> Classification</h2>
+                <div class="field">
+                    <label class="label">CLASSIFICATION</label>
+                    <div class="pill-group" data-id="clasificacion">
+                        <div class="pill active" data-val="investment_expense">Investment Expense</div>
+                        <div class="pill" data-val="operating_expense">Operating Expense</div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">CATEGORY</label>
+                    <div class="pill-group" data-id="categoria">
+                        <div class="pill active" data-val="infrastructure">Infrastructure</div>
+                        <div class="pill" data-val="energy">Energy</div>
+                        <div class="pill" data-val="supplies">Supplies</div>
+                        <div class="pill" data-val="labor">Labor</div>
+                        <div class="pill" data-val="water">Water</div>
+                        <div class="pill" data-val="sanitary_control">Sanitary Control</div>
+                        <div class="pill" data-val="equipment">Equipment</div>
+                        <div class="pill" data-val="maintenance">Maintenance</div>
+                        <div class="pill" data-val="various">Various</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="refresh-cw"></i> Cycle Phase</h2>
+                <div class="field">
+                    <div class="pill-group" data-id="fase_proceso">
+                        <div class="pill active" data-val="vegetativa">vegetative</div>
+                        <div class="pill" data-val="floración">bloom</div>
+                        <div class="pill" data-val="ambas">both</div>
+                        <div class="pill" data-val="ninguna">none</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-title"><i data-lucide="dollar-sign"></i> Economic Values</h2>
+                <div class="grid-2">
+                    <div class="field">
+                        <label class="label">AMOUNT (LOCAL)</label>
+                        <input type="number" step="0.01" id="monto" class="input-h" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label class="label">USD RATE</label>
+                        <input type="number" step="0.01" id="cotizacion_usd" class="input-h" placeholder="1200.00">
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-primary" onclick="handleSave()">Save Record</button>
+        </form>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        document.querySelectorAll('.pill-group .pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                const group = pill.closest('.pill-group');
+                group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+            });
+        });
+
+        function handleSave() {
+            const getActivePill = (groupId) => {
+                const active = document.querySelector(`.pill-group[data-id="${groupId}"] .pill.active`);
+                return active ? active.getAttribute('data-val') : null;
+            };
+
+            const payload = {
+                nombre_item: document.getElementById('nombre_item').value,
+                descripcion: document.getElementById('descripcion').value,
+                clasificacion: getActivePill('clasificacion'),
+                categoria: getActivePill('categoria'),
+                fase_proceso: getActivePill('fase_proceso'),
+                monto: parseFloat(document.getElementById('monto').value) || 0,
+                cotizacion_usd: parseFloat(document.getElementById('cotizacion_usd').value) || 0
+            };
+            
+            if (typeof handleStepSave === 'function') {
+                handleStepSave(payload);
+            } else {
+                console.log("Payload:", payload);
+                alert("Finance data logged to console.");
+            }
+        }
+    </script>
+</body>
+</html>
