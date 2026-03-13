@@ -7,7 +7,7 @@ const state = {
     currentStep: 0,
     steps: ['batch.html', 'infrastructure.html', 'supplies.html', 'setup_detail'],
     formData: {
-        id_lote: null // Aquí guardaremos el ID que nos devuelva Supabase
+        id_lote: null 
     } 
 };
 
@@ -17,25 +17,21 @@ const state = {
 async function startOnboarding(type) {
     state.environment = type;
     
-    // Ajustamos el último paso según la elección del entorno
     state.steps[3] = (type === 'indoor') ? 'indoor.html' : 'outdoor.html';
 
     try {
-        // Registro inicial en Supabase
-        // IMPORTANTE: Asegúrate que la columna se llame 'espacio' en tu tabla 'lotes'
-        const { data, error } = await supabase
+        // Usamos 'supabaseClient' definido en config.js
+        const { data, error } = await supabaseClient
             .from('lotes')
             .insert([{ espacio: type }])
             .select();
 
         if (error) throw error;
 
-        // Guardamos el ID generado (en tu captura se ve como 'id del lote')
-        // Si en la DB el nombre tiene espacios, se accede así: data[0]['id del lote']
-        state.formData.id_lote = data[0]['id del lote'] || data[0].id;
-        console.log("Registro exitoso. ID del Lote:", state.formData.id_lote);
+        // Acceso seguro al ID del lote (con espacios como en tu tabla)
+        state.formData.id_lote = data[0]['id del lote'];
+        console.log("Registro exitoso en Supabase. ID:", state.formData.id_lote);
 
-        // Efecto visual: Ocultamos el branding
         const header = document.getElementById('header-branding');
         if (header) {
             header.style.opacity = '0';
@@ -46,14 +42,11 @@ async function startOnboarding(type) {
         }
 
     } catch (error) {
-        console.error("Error de conexión con Supabase:", error.message);
-        alert("No se pudo iniciar el registro. Revisa la consola.");
+        console.error("Error detallado:", error);
+        alert("Error de conexión: " + error.message);
     }
 }
 
-/**
- * Carga el siguiente archivo HTML en el viewport
- */
 async function loadNextStep() {
     const viewport = document.getElementById('app-viewport');
     const nextFile = state.steps[state.currentStep];
@@ -84,9 +77,6 @@ async function loadNextStep() {
     }
 }
 
-/**
- * Recibe los datos de cada formulario y los acumula
- */
 function handleStepSave(data) {
     state.formData = { ...state.formData, ...data };
     console.log(`Paso ${state.currentStep} guardado localmente:`, state.formData);
@@ -98,9 +88,6 @@ function handleStepSave(data) {
     }
 }
 
-/**
- * Finaliza el onboarding
- */
 function finalizeSetup() {
     const viewport = document.getElementById('app-viewport');
     
