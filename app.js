@@ -12,7 +12,7 @@ const state = {
 };
 
 /**
- * Inicia el flujo principal y crea el registro en Supabase
+ * Inicia el flujo principal y crea el registro inicial
  */
 async function startOnboarding(type) {
     if (state.formData.lote_id) return;
@@ -25,7 +25,10 @@ async function startOnboarding(type) {
     try {
         const { data, error } = await supabaseClient
             .from('lotes')
-            .insert([{ espacio: type }])
+            .insert([{ 
+                espacio: type,
+                estado_del_lote: 'activo' // Valor por defecto seguro
+            }])
             .select();
 
         if (error) throw error;
@@ -65,17 +68,18 @@ async function loadNextStep() {
         const html = await response.text();
         viewport.innerHTML = html;
 
-        // --- RE-INICIALIZACIÓN DE COMPONENTES ---
-        // 1. Iconos
+        // --- RE-INICIALIZACIÓN ---
         if (window.lucide) lucide.createIcons();
 
-        // 2. Interactividad de las Pills (Seleccionadores)
+        // Activación de Pills
         const pills = viewport.querySelectorAll('.pill');
         pills.forEach(pill => {
             pill.onclick = function() {
                 const group = this.closest('.pill-group');
-                group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-                this.classList.add('active');
+                if (group) {
+                    group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                }
             };
         });
         
@@ -87,9 +91,10 @@ async function loadNextStep() {
 }
 
 /**
- * Guarda los datos en Supabase
+ * Sincroniza datos con Supabase
  */
 async function handleStepSave(data) {
+    console.log("Intentando actualizar lote:", state.formData.lote_id);
     try {
         const { error } = await supabaseClient
             .from('lotes')
@@ -108,7 +113,7 @@ async function handleStepSave(data) {
 }
 
 /**
- * Función Global para batch.html
+ * Captura masiva de batch.html
  */
 window.submitBatchForm = function() {
     const getVal = (id, fallback) => {
@@ -117,10 +122,13 @@ window.submitBatchForm = function() {
     };
 
     const getActivePill = (id) => {
-        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
+        const group = document.querySelector(`.pill-group[data-id="${id}"]`);
+        if (!group) return null;
+        const active = group.querySelector('.pill.active');
         return active ? active.dataset.val : null;
     };
 
+    // Construcción del objeto de datos
     const formData = {
         nombre_del_lote: getVal('nombre_del_lote', 'Nuevo Lote'),
         estado_del_lote: getActivePill('estado_del_lote') || 'activo',
@@ -131,7 +139,8 @@ window.submitBatchForm = function() {
         banco: getVal('banco', ''),
         predominancia_genetica: getActivePill('predominancia_genetica'),
         thc_esperado: parseFloat(getVal('thc_esperado', 0)),
-        cbd_esperado: parseFloat(getVal('cbd_esperado', 0))
+        cbd_esperado: parseFloat(getVal('cbd_esperado', 0)),
+        fecha_de_germinacion_esqueje: getVal('fecha_de_germinacion_esqueje', null) || null
     };
 
     handleStepSave(formData);
