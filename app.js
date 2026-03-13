@@ -16,33 +16,32 @@ const state = {
  */
 async function startOnboarding(type) {
     state.environment = type;
-    
-    // Ajustamos dinámicamente el último paso según el entorno
     state.steps[3] = (type === 'indoor') ? 'indoor.html' : 'outdoor.html';
 
     console.log("Iniciando registro para:", type);
 
     try {
-        // Validación de existencia del cliente antes de operar
         if (typeof supabaseClient === 'undefined') {
             throw new Error("supabaseClient no detectado. Verifica config.js");
         }
 
-        // INSERT inicial: Creamos el registro solo con el campo 'espacio'
+        // INSERT inicial
         const { data, error } = await supabaseClient
             .from('lotes')
             .insert([{ espacio: type }])
             .select();
 
-        if (error) throw error;
+        if (error) {
+            // Si el error es 42501 o similar, es un tema de RLS
+            console.error("Error de Supabase:", error);
+            throw new Error("Permiso denegado (RLS). Verifica las políticas de la tabla 'lotes'.");
+        }
 
-        // Capturamos el ID generado por la base de datos
         if (data && data.length > 0) {
             // Usamos el nombre exacto de la columna en tu DB: 'id del lote'
             state.formData.id_lote = data[0]['id del lote'];
             console.log("Conexión Exitosa. ID asignado:", state.formData.id_lote);
 
-            // Transición visual: Desvanecer branding y cargar siguiente paso
             const header = document.getElementById('header-branding');
             if (header) {
                 header.style.opacity = '0';
@@ -54,14 +53,13 @@ async function startOnboarding(type) {
         }
 
     } catch (error) {
-        console.error("Error en el registro inicial:", error);
-        // El alert nos dirá si el problema es la KEY o la Policy (RLS)
-        alert("Error de Conexión: " + error.message);
+        console.error("Error detallado:", error);
+        alert(error.message);
     }
 }
 
 /**
- * Carga los archivos HTML de forma secuencial en el viewport
+ * Carga los archivos HTML en el viewport
  */
 async function loadNextStep() {
     const viewport = document.getElementById('app-viewport');
@@ -69,7 +67,6 @@ async function loadNextStep() {
 
     if (!nextFile) return;
 
-    // Animación de salida
     viewport.style.opacity = '0';
     viewport.style.transform = 'translateY(10px)';
 
@@ -81,14 +78,9 @@ async function loadNextStep() {
         
         setTimeout(() => {
             viewport.innerHTML = html;
-            
-            // Re-inicializamos iconos para el nuevo contenido
             if (window.lucide) lucide.createIcons();
-            
-            // Animación de entrada
             viewport.style.opacity = '1';
             viewport.style.transform = 'translateY(0)';
-            
             state.currentStep++;
         }, 300);
 
@@ -100,35 +92,44 @@ async function loadNextStep() {
 }
 
 /**
- * Función que llamarán los formularios de batch.html, infrastructure.html, etc.
- * para guardar sus datos en el 'state' local antes del envío final.
+ * Actualiza el registro en Supabase con los nuevos datos del formulario
  */
-function handleStepSave(data) {
+async function handleStepSave(data) {
     state.formData = { ...state.formData, ...data };
-    console.log(`Datos acumulados (Paso ${state.currentStep}):`, state.formData);
+    console.log("Actualizando lote ID:", state.formData.id_lote);
 
-    if (state.currentStep < state.steps.length) {
-        loadNextStep();
-    } else {
-        finalizeSetup();
+    try {
+        const { error } = await supabaseClient
+            .from('lotes')
+            .update(data)
+            .eq('id del lote', state.formData.id_lote);
+
+        if (error) throw error;
+
+        console.log("Datos guardados en Supabase correctamente.");
+
+        if (state.currentStep < state.steps.length) {
+            loadNextStep();
+        } else {
+            finalizeSetup();
+        }
+
+    } catch (error) {
+        console.error("Error al actualizar datos:", error.message);
+        alert("No se pudieron guardar los detalles del lote.");
     }
 }
 
-/**
- * Pantalla final de éxito
- */
 function finalizeSetup() {
     const viewport = document.getElementById('app-viewport');
-    
     viewport.innerHTML = `
         <div class="card fade-in">
             <i data-lucide="check-circle" size="48" style="color: #10B981; margin-bottom: 20px;"></i>
             <h2 style="font-weight: 300; margin-bottom: 10px;">¡Configuración Lista!</h2>
             <p style="font-size: 14px; color: #6B7280; opacity: 0.8;">
-                Estamos calibrando el sistema para tu cultivo ${state.environment}.
+                Calibrando sistema para cultivo ${state.environment}.
             </p>
         </div>
     `;
-    
     if (window.lucide) lucide.createIcons();
 }
