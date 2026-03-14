@@ -1,11 +1,13 @@
 /**
  * app.js - Orquestador Maestro de Cultivo IA
+ * Versión: 2.1 (Multi-tabla & Upsert optimizado)
  */
 
+// 1. ESTADO GLOBAL
 const state = {
     environment: null,
     currentStep: 0,
-    // Asegúrate de que estos archivos existan en tu directorio raíz
+    // Asegúrate de que estos .html existan en tu raíz de Vercel
     steps: ['batch.html', 'infrastructure.html', 'supplies.html', 'setup_detail'],
     formData: {
         lote_id: null 
@@ -13,29 +15,26 @@ const state = {
 };
 
 /**
- * 1. INICIO DEL FLUJO
- * Se dispara desde el index.html (Botones Indoor/Outdoor)
+ * 2. REGISTRO INICIAL (index.html)
+ * Se ejecuta al elegir Indoor u Outdoor
  */
 async function startOnboarding(type) {
-    // Bloqueo de seguridad: Si ya hay un proceso, no crear otro registro
+    // Si ya existe un lote_id en esta sesión, saltamos al siguiente paso
     if (state.formData.lote_id) {
-        console.log("Sesión activa detectada:", state.formData.lote_id);
         loadNextStep();
         return;
     }
 
     state.environment = type;
-    // El cuarto paso cambia según el entorno elegido
     state.steps[3] = (type === 'indoor') ? 'indoor.html' : 'outdoor.html';
 
     try {
-        console.log("Iniciando registro inicial para:", type);
-        
-        // INSERT inicial en Supabase
+        // Registro base en 'lotes'
         const { data, error } = await supabaseClient
             .from('lotes')
             .insert([{ 
                 espacio: type,
+                nombre_del_lote: `Lote ${type.toUpperCase()} - ${new Date().toLocaleDateString()}`,
                 estado_del_lote: 'active' 
             }])
             .select();
@@ -44,9 +43,8 @@ async function startOnboarding(type) {
 
         if (data && data.length > 0) {
             state.formData.lote_id = data[0].lote_id;
-            console.log("Registro exitoso. ID asignado:", state.formData.lote_id);
-
-            // Transición visual
+            
+            // Animación de salida del header
             const header = document.getElementById('header-branding');
             if (header) {
                 header.style.opacity = '0';
@@ -57,154 +55,149 @@ async function startOnboarding(type) {
             }
         }
     } catch (error) {
-        console.error("Error en startOnboarding:", error);
-        alert("Error de conexión con la base de datos: " + error.message);
+        console.error("Error inicial:", error.message);
+        alert("Error al iniciar lote: " + error.message);
     }
 }
 
 /**
- * 2. MOTOR DE CARGA DINÁMICA
- * Carga el HTML de cada paso y "despierta" sus componentes
+ * 3. MOTOR DE NAVEGACIÓN (CARGA DINÁMICA)
  */
 async function loadNextStep() {
     const viewport = document.getElementById('app-viewport');
     const nextFile = state.steps[state.currentStep];
 
     if (!nextFile) {
-        console.log("Fin del flujo de configuración.");
+        console.log("Flujo finalizado correctamente.");
         return;
     }
 
     try {
-        console.log("Cargando:", nextFile);
         const response = await fetch(nextFile);
-        
-        if (!response.ok) {
-            throw new Error(`404: No se encontró el archivo ${nextFile}`);
-        }
+        if (!response.ok) throw new Error(`Archivo no encontrado: ${nextFile}`);
         
         const html = await response.text();
         viewport.innerHTML = html;
 
-        // --- RE-INICIALIZACIÓN DE COMPONENTES ---
-        // Despertar iconos de Lucide
+        // Re-activar componentes de UI
         if (window.lucide) lucide.createIcons();
-
-        // Despertar lógica de las "Pills" (Seleccionadores)
-        const pills = viewport.querySelectorAll('.pill');
-        pills.forEach(pill => {
-            pill.onclick = function() {
-                const group = this.closest('.pill-group');
-                if (group) {
-                    group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-                    this.classList.add('active');
-                }
-            };
-        });
+        initPillInteractions(viewport);
         
         state.currentStep++;
         window.scrollTo(0, 0);
 
     } catch (error) {
-        console.error("Error en loadNextStep:", error);
-        viewport.innerHTML = `
-            <div class="section-card" style="text-align:center;">
-                <p style="color:red;">Error al cargar el componente: <b>${nextFile}</b></p>
-                <p>Asegúrate de que el archivo existe en tu repositorio.</p>
-            </div>`;
+        console.error("Error de carga:", error);
+        viewport.innerHTML = `<div class="section-card"><p style="color:red;">Error al cargar el componente <b>${nextFile}</b>. Verifica que el archivo existe en el repositorio.</p></div>`;
     }
 }
 
 /**
- * 3. SINCRONIZACIÓN DE DATOS (UPDATE)
- * Actualiza la fila existente en Supabase usando el lote_id
+ * Activa el evento click en los botones tipo "Pill"
  */
-async function handleStepSave(data) {
+function initPillInteractions(container) {
+    const pills = container.querySelectorAll('.pill');
+    pills.forEach(pill => {
+        pill.onclick = function() {
+            const group = this.closest('.pill-group');
+            if (group) {
+                group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+            }
+        };
+    });
+}
+
+/**
+ * 4. SISTEMA DE PERSISTENCIA (GUARDADO)
+ * tableName: 'lotes' (por defecto) o 'infraestructura'
+ */
+async function handleStepSave(data, tableName = 'lotes') {
     if (!state.formData.lote_id) {
-        alert("Error: No se encontró un ID de lote válido.");
+        alert("Sesión inválida. Por favor reinicia.");
         return;
     }
 
     try {
-        console.log("Sincronizando datos para ID:", state.formData.lote_id);
-        const { error } = await supabaseClient
-            .from('lotes')
-            .update(data)
-            .eq('lote_id', state.formData.lote_id);
+        let query;
 
+        if (tableName === 'infraestructura') {
+            // UPSERT: Inserta si no existe, actualiza si ya existe el lote_id
+            query = supabaseClient
+                .from('infraestructura')
+                .upsert({ 
+                    lote_id: state.formData.lote_id, 
+                    ...data 
+                }, { onConflict: 'lote_id' });
+        } else {
+            // UPDATE: Actualiza la fila principal del lote
+            query = supabaseClient
+                .from('lotes')
+                .update(data)
+                .eq('lote_id', state.formData.lote_id);
+        }
+
+        const { error } = await query;
         if (error) throw error;
 
-        console.log("Sincronización exitosa.");
+        console.log(`Guardado exitoso en ${tableName}`);
         loadNextStep();
 
     } catch (error) {
-        console.error("Error en handleStepSave:", error.message);
-        alert("No se pudo guardar: " + error.message);
+        console.error("Error al sincronizar:", error.message);
+        alert("Error de guardado: " + error.message);
     }
 }
 
 /**
- * 4. RECOLECTORES DE FORMULARIOS (BRIDGES)
+ * 5. BRIDGES (Conectores entre HTML y Supabase)
  */
 
-// Captura para batch.html
+// Se llama desde batch.html
 window.submitBatchForm = function() {
-    const getVal = (id, fallback) => {
-        const el = document.getElementById(id);
-        return el ? (el.value || fallback) : fallback;
-    };
-
+    const getVal = (id) => document.getElementById(id)?.value || null;
     const getActivePill = (id) => {
-        const group = document.querySelector(`.pill-group[data-id="${id}"]`);
-        if (!group) return null;
-        const active = group.querySelector('.pill.active');
+        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
         return active ? active.dataset.val : null;
     };
 
     const formData = {
-        nombre_del_lote: getVal('nombre_del_lote', 'Nuevo Lote'),
+        nombre_del_lote: getVal('nombre_del_lote'),
         estado_del_lote: getActivePill('estado_del_lote') || 'active',
         variedad: getActivePill('variedad'),
         tipo_de_cultivo: getActivePill('tipo_de_cultivo'),
-        cantidad_de_plantas: parseInt(getVal('cantidad_de_plantas', 0)) || 0,
-        genetica: getVal('genetica', ''),
-        banco: getVal('banco', ''),
+        cantidad_de_plantas: parseInt(getVal('cantidad_de_plantas')) || 0,
+        genetica: getVal('genetica'),
+        banco: getVal('banco'),
         predominancia_genetica: getActivePill('predominancia_genetica'),
-        thc_esperado: parseFloat(getVal('thc_esperado', 0)) || 0,
-        cbd_esperado: parseFloat(getVal('cbd_esperado', 0)) || 0,
-        fecha_de_germinacion_esqueje: getVal('fecha_de_germinacion_esqueje', null) || null
+        thc_esperado: parseFloat(getVal('thc_esperado')) || 0,
+        cbd_esperado: parseFloat(getVal('cbd_esperado')) || 0
     };
 
-    handleStepSave(formData);
+    handleStepSave(formData, 'lotes');
 };
 
-// Captura para infrastructure.html
+// Se llama desde infrastructure.html
 window.submitInfraForm = function() {
-    const getVal = (id, fallback) => {
-        const el = document.getElementById(id);
-        return el ? (el.value || fallback) : fallback;
-    };
-
+    const getVal = (id) => document.getElementById(id)?.value || null;
     const getActivePill = (id) => {
-        const group = document.querySelector(`.pill-group[data-id="${id}"]`);
-        if (!group) return null;
-        const active = group.querySelector('.pill.active');
+        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
         return active ? active.dataset.val : null;
     };
 
     const formData = {
         lugar_cultivo: getActivePill('lugar_cultivo'),
-        ancho: parseFloat(getVal('ancho', 0)) || 0,
-        largo: parseFloat(getVal('largo', 0)) || 0,
-        alto: parseFloat(getVal('alto', 0)) || 0,
-        sustrato: getVal('sustrato', ''),
-        iluminacion: getVal('iluminacion', ''),
-        control_humedad: getVal('control_humedad', ''),
-        control_temperatura: getVal('control_temperatura', ''),
-        movimiento_aire: getVal('movimiento_aire', ''),
-        iny_ext_aire: getVal('iny_ext_aire', ''),
-        observaciones_infraestructura: getVal('observaciones_infraestructura', '')
+        ancho: parseFloat(getVal('ancho')) || 0,
+        largo: parseFloat(getVal('largo')) || 0,
+        alto: parseFloat(getVal('alto')) || 0,
+        sustrato: getVal('sustrato'),
+        iluminacion: getVal('iluminacion'),
+        control_humedad: getVal('control_humedad'),
+        control_temperatura: getVal('control_temperatura'),
+        movimiento_aire: getVal('movimiento_aire'),
+        iny_ext_aire: getVal('iny_ext_aire'),
+        observaciones_infraestructura: getVal('observaciones_infraestructura')
     };
 
-    handleStepSave(formData);
+    handleStepSave(formData, 'infraestructura');
 };
