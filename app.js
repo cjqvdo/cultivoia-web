@@ -1,27 +1,32 @@
 /**
  * app.js - Orquestador Maestro de Cultivo IA
- * Soporte: lotes, infraestructura e insumos
+ * SOLUCIÓN: Multi-tabla con soporte para Lotes, Infraestructura e Insumos
  */
 
 const state = {
     environment: null,
     currentStep: 0,
     steps: ['batch.html', 'infrastructure.html', 'supplies.html', 'setup_detail'],
-    formData: { lote_id: null } 
+    formData: {
+        lote_id: null 
+    } 
 };
 
 /**
- * 1. INICIO DEL FLUJO
+ * 1. INICIO DEL FLUJO (index.html)
  */
 async function startOnboarding(type) {
     if (state.formData.lote_id) {
         loadNextStep();
         return;
     }
+
     state.environment = type;
     state.steps[3] = (type === 'indoor') ? 'indoor.html' : 'outdoor.html';
 
     try {
+        console.log("Iniciando registro para:", type);
+        
         const { data, error } = await supabaseClient
             .from('lotes')
             .insert([{ 
@@ -32,39 +37,55 @@ async function startOnboarding(type) {
             .select();
 
         if (error) throw error;
+
         if (data && data.length > 0) {
             state.formData.lote_id = data[0].lote_id;
-            loadNextStep();
+            console.log("Registro exitoso. ID:", state.formData.lote_id);
+
+            const header = document.getElementById('header-branding');
+            if (header) {
+                header.style.opacity = '0';
+                setTimeout(() => {
+                    header.style.display = 'none';
+                    loadNextStep();
+                }, 300);
+            }
         }
     } catch (error) {
-        alert("Error inicial: " + error.message);
+        console.error("Error en startOnboarding:", error.message);
+        alert("Error al iniciar: " + error.message);
     }
 }
 
 /**
- * 2. MOTOR DE NAVEGACIÓN
+ * 2. MOTOR DE CARGA DINÁMICA
  */
 async function loadNextStep() {
     const viewport = document.getElementById('app-viewport');
     const nextFile = state.steps[state.currentStep];
+
     if (!nextFile) return;
 
     try {
         const response = await fetch(nextFile);
+        if (!response.ok) throw new Error(`404: No se encontró ${nextFile}`);
+        
         const html = await response.text();
         viewport.innerHTML = html;
 
         if (window.lucide) lucide.createIcons();
-        initPills(viewport);
+        initPillInteractions(viewport);
         
         state.currentStep++;
         window.scrollTo(0, 0);
+
     } catch (error) {
-        console.error("Error cargando paso:", error);
+        console.error("Error en loadNextStep:", error);
+        viewport.innerHTML = `<div class="section-card"><p style="color:red;">Error al cargar: <b>${nextFile}</b></p></div>`;
     }
 }
 
-function initPills(container) {
+function initPillInteractions(container) {
     const pills = container.querySelectorAll('.pill');
     pills.forEach(pill => {
         pill.onclick = function() {
@@ -78,41 +99,100 @@ function initPills(container) {
 }
 
 /**
- * 3. PERSISTENCIA MULTI-TABLA
+ * 3. PERSISTENCIA (UPDATE / UPSERT / INSERT)
  */
 async function handleStepSave(data, tableName = 'lotes') {
+    if (!state.formData.lote_id) {
+        alert("Error: No se encontró el ID del lote.");
+        return;
+    }
+
     try {
         let query;
+
         if (tableName === 'infraestructura') {
-            query = supabaseClient.from('infraestructura').upsert({ lote_id: state.formData.lote_id, ...data }, { onConflict: 'lote_id' });
+            query = supabaseClient
+                .from('infraestructura')
+                .upsert({ 
+                    lote_id: state.formData.lote_id, 
+                    ...data 
+                }, { onConflict: 'lote_id' });
         } else if (tableName === 'insumos') {
-            // Para insumos usamos INSERT ya que un lote puede tener muchos insumos
-            query = supabaseClient.from('insumos').insert([data]);
+            // Para insumos usamos INSERT simple según tu esquema de tabla
+            query = supabaseClient
+                .from('insumos')
+                .insert([data]);
         } else {
-            query = supabaseClient.from('lotes').update(data).eq('lote_id', state.formData.lote_id);
+            query = supabaseClient
+                .from('lotes')
+                .update(data)
+                .eq('lote_id', state.formData.lote_id);
         }
 
         const { error } = await query;
         if (error) throw error;
+
+        console.log(`Guardado exitoso en [${tableName}]`);
         loadNextStep();
+
     } catch (error) {
-        alert("Error de guardado en " + tableName + ": " + error.message);
+        console.error("Error en handleStepSave:", error.message);
+        alert("No se pudo guardar: " + error.message);
     }
 }
 
 /**
- * 4. RECOLECTORES (BRIDGES)
+ * 4. RECOLECTORES (Bridges)
  */
 
 window.submitBatchForm = function() {
-    // ... (Código anterior de batch.html)
+    const getVal = (id) => document.getElementById(id)?.value || null;
+    const getActivePill = (id) => {
+        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
+        return active ? active.dataset.val : null;
+    };
+
+    const formData = {
+        nombre_del_lote: getVal('nombre_del_lote'),
+        estado_del_lote: getActivePill('estado_del_lote') || 'active',
+        variedad: getActivePill('variedad'),
+        tipo_de_cultivo: getActivePill('tipo_de_cultivo'),
+        cantidad_de_plantas: parseInt(getVal('cantidad_de_plantas')) || 0,
+        genetica: getVal('genetica'),
+        banco: getVal('banco'),
+        predominancia_genetica: getActivePill('predominancia_genetica'),
+        thc_esperado: parseFloat(getVal('thc_esperado')) || 0,
+        cbd_esperado: parseFloat(getVal('cbd_esperado')) || 0
+    };
+
+    handleStepSave(formData, 'lotes');
 };
 
 window.submitInfraForm = function() {
-    // ... (Código anterior de infrastructure.html)
+    const getVal = (id) => document.getElementById(id)?.value || null;
+    const getActivePill = (id) => {
+        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
+        return active ? active.dataset.val : null;
+    };
+
+    const formData = {
+        lugar_cultivo: getActivePill('lugar_cultivo'),
+        ancho: parseFloat(getVal('ancho')) || 0,
+        largo: parseFloat(getVal('largo')) || 0,
+        alto: parseFloat(getVal('alto')) || 0,
+        sustrato: getVal('sustrato'),
+        iluminacion: getVal('iluminacion'),
+        control_humedad: getVal('control_humedad'),
+        control_temperatura: getVal('control_temperatura'),
+        movimiento_aire: getVal('movimiento_aire'),
+        iny_ext_aire: getVal('iny_ext_aire'),
+        observaciones_infraestructura: getVal('observaciones_infraestructura')
+    };
+
+    handleStepSave(formData, 'infraestructura');
 };
 
-// NUEVO: Bridge para supplies.html
+// NUEVO RECOLECTOR PARA SUPPLIES.HTML
 window.submitSuppliesForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
     const getActivePill = (id) => {
@@ -120,17 +200,16 @@ window.submitSuppliesForm = function() {
         return active ? active.dataset.val : null;
     };
 
-    // Mapeo exacto a las columnas de tu imagen de la tabla 'insumos'
     const formData = {
         nombre: getVal('nombre'),
         marca: getVal('marca'),
-        categoria: getActivePill('categorías'),
+        categoria: getActivePill('categorías'), // Mapeo a columna 'categoria'
         tipo_base: getActivePill('tipo_base'),
         formato: getActivePill('formato'),
         uso_principal: getVal('uso_principal'),
-        aplicacion: getActivePill('aplicación'),
+        aplicacion: getActivePill('aplicación'), // Mapeo a columna 'aplicacion'
         incompatibilidad: getVal('incompatibilidad'),
-        stock: parseFloat(getVal('existencias')) || 0,
+        stock: parseFloat(getVal('existencias')) || 0, // Mapeo a columna 'stock'
         unidad_de_medida: getVal('unidad_de_medida')
     };
 
