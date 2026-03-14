@@ -121,82 +121,82 @@
 <body>
 
     <div class="container">
-        <header>
-            <h1>Infrastructure</h1>
-        </header>
+    <header>
+        <h1>Infrastructure</h1>
+    </header>
 
-        <form id="infraForm">
-            <div class="section-card">
-                <h2 class="section-title"><i data-lucide="map-pin"></i> Location & Space</h2>
-                <div class="field">
-                    <label class="label">CULTIVATION PLACE</label>
-                    <div class="pill-group" data-id="lugar_cultivo">
-                        <div class="pill active" data-val="indoor room">indoor room</div>
-                        <div class="pill" data-val="greenhouse">greenhouse</div>
-                        <div class="pill" data-val="open field">open field</div>
-                        <div class="pill" data-val="covered field">covered field</div>
-                    </div>
-                </div>
-                
-                <div class="grid-3">
-                    <div class="field">
-                        <label class="label">WIDTH (m)</label>
-                        <input type="number" step="0.01" id="ancho" class="input-h" placeholder="0.00">
-                    </div>
-                    <div class="field">
-                        <label class="label">LENGTH (m)</label>
-                        <input type="number" step="0.01" id="largo" class="input-h" placeholder="0.00">
-                    </div>
-                    <div class="field">
-                        <label class="label">HEIGHT (m)</label>
-                        <input type="number" step="0.01" id="alto" class="input-h" placeholder="0.00">
-                    </div>
+    <form id="infraForm">
+        <div class="section-card">
+            <h2 class="section-title"><i data-lucide="map-pin"></i> Location & Space</h2>
+            <div class="field">
+                <label class="label">CULTIVATION PLACE</label>
+                <div class="pill-group" data-id="lugar_cultivo">
+                    <div class="pill active" data-val="indoor room">indoor room</div>
+                    <div class="pill" data-val="greenhouse">greenhouse</div>
+                    <div class="pill" data-val="open field">open field</div>
+                    <div class="pill" data-val="covered field">covered field</div>
                 </div>
             </div>
-
-            <div class="section-card">
-                <h2 class="section-title"><i data-lucide="cpu"></i> Systems</h2>
+            
+            <div class="grid-3">
                 <div class="field">
-                    <label class="label">SUBSTRATE</label>
-                    <input type="text" id="sustrato" class="input-h" placeholder="Type of soil or mix">
+                    <label class="label">WIDTH (m)</label>
+                    <input type="number" step="0.01" id="ancho" class="input-h" placeholder="0.00">
                 </div>
                 <div class="field">
-                    <label class="label">LIGHTING</label>
-                    <input type="text" id="iluminacion" class="input-h" placeholder="LED, HPS, Sun, etc.">
+                    <label class="label">LENGTH (m)</label>
+                    <input type="number" step="0.01" id="largo" class="input-h" placeholder="0.00">
                 </div>
                 <div class="field">
-                    <label class="label">HUMIDITY CONTROL</label>
-                    <input type="text" id="control_humedad" class="input-h" placeholder="Dehumidifier, Mist, etc.">
-                </div>
-                <div class="field">
-                    <label class="label">TEMPERATURE CONTROL</label>
-                    <input type="text" id="control_temperatura" class="input-h" placeholder="AC, Heater, etc.">
+                    <label class="label">HEIGHT (m)</label>
+                    <input type="number" step="0.01" id="alto" class="input-h" placeholder="0.00">
                 </div>
             </div>
+        </div>
 
-            <div class="section-card">
-                <h2 class="section-title"><i data-lucide="wind"></i> Airflow</h2>
-                <div class="field">
-                    <label class="label">AIR MOVEMENT</label>
-                    <input type="text" id="movimiento_aire" class="input-h" placeholder="Fans, Oscillation">
-                </div>
-                <div class="field">
-                    <label class="label">INFLOW / OUTFLOW</label>
-                    <input type="text" id="iny_ext_aire" class="input-h" placeholder="Intake & Exhaust details">
-                </div>
+        <div class="section-card">
+            <h2 class="section-title"><i data-lucide="cpu"></i> Systems</h2>
+            <div class="field">
+                <label class="label">SUBSTRATE</label>
+                <input type="text" id="sustrato" class="input-h" placeholder="Type of soil or mix">
             </div>
-
-            <div class="section-card">
-                <h2 class="section-title"><i data-lucide="file-text"></i> Additional Info</h2>
-                <div class="field">
-                    <label class="label">INFRASTRUCTURE OBSERVATIONS</label>
-                    <textarea id="observaciones_infraestructura" class="input-h" style="height: 100px; padding-top:15px;" placeholder="Any extra details..."></textarea>
-                </div>
+            <div class="field">
+                <label class="label">LIGHTING</label>
+                <input type="text" id="iluminacion" class="input-h" placeholder="LED, HPS, Sun, etc.">
             </div>
+            <div class="field">
+                <label class="label">HUMIDITY CONTROL</label>
+                <input type="text" id="control_humedad" class="input-h" placeholder="Dehumidifier, Mist, etc.">
+            </div>
+            <div class="field">
+                <label class="label">TEMPERATURE CONTROL</label>
+                <input type="text" id="control_temperatura" class="input-h" placeholder="AC, Heater, etc.">
+            </div>
+        </div>
 
-            <button type="button" class="btn-primary" onclick="handleSave()">Save Infrastructure</button>
-        </form>
-    </div>
+        <div class="section-card">
+            <h2 class="section-title"><i data-lucide="wind"></i> Airflow</h2>
+            <div class="field">
+                <label class="label">AIR MOVEMENT</label>
+                <input type="text" id="movimiento_aire" class="input-h" placeholder="Fans, Oscillation">
+            </div>
+            <div class="field">
+                <label class="label">INFLOW / OUTFLOW</label>
+                <input type="text" id="iny_ext_aire" class="input-h" placeholder="Intake & Exhaust details">
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title"><i data-lucide="file-text"></i> Additional Info</h2>
+            <div class="field">
+                <label class="label">INFRASTRUCTURE OBSERVATIONS</label>
+                <textarea id="observaciones_infraestructura" class="input-h" style="height: 100px; padding-top:15px;" placeholder="Any extra details..."></textarea>
+            </div>
+        </div>
+
+        <button type="button" class="btn-primary" onclick="window.submitInfraForm()">Save Infrastructure</button>
+    </form>
+</div>
 
     <script>
         lucide.createIcons();
