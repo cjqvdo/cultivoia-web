@@ -5,6 +5,7 @@
 const state = {
     environment: null,
     currentStep: 0,
+    // Asegúrate de que estos archivos EXISTAN en tu carpeta
     steps: ['batch.html', 'infrastructure.html', 'supplies.html', 'setup_detail'],
     formData: {
         lote_id: null 
@@ -12,22 +13,27 @@ const state = {
 };
 
 /**
- * Inicia el flujo principal y crea el registro inicial
+ * Inicia el flujo principal
  */
 async function startOnboarding(type) {
-    if (state.formData.lote_id) return;
+    // BLOQUEO: Si ya tenemos un ID, no creamos otro lote
+    if (state.formData.lote_id) {
+        console.log("Ya existe un lote en proceso:", state.formData.lote_id);
+        loadNextStep(); // Saltamos directo al primer paso
+        return;
+    }
 
     state.environment = type;
+    // Ajuste dinámico del último paso
     state.steps[3] = (type === 'indoor') ? 'indoor.html' : 'outdoor.html';
 
-    console.log("Iniciando registro para:", type);
-
     try {
+        console.log("Creando registro inicial para:", type);
         const { data, error } = await supabaseClient
             .from('lotes')
             .insert([{ 
                 espacio: type,
-                estado_del_lote: 'activo' // Valor por defecto seguro
+                estado_del_lote: 'active' 
             }])
             .select();
 
@@ -35,8 +41,9 @@ async function startOnboarding(type) {
 
         if (data && data.length > 0) {
             state.formData.lote_id = data[0].lote_id;
-            console.log("Conexión Exitosa. ID asignado:", state.formData.lote_id);
-
+            console.log("Registro Creado. ID:", state.formData.lote_id);
+            
+            // Animación de salida
             const header = document.getElementById('header-branding');
             if (header) {
                 header.style.opacity = '0';
@@ -47,31 +54,38 @@ async function startOnboarding(type) {
             }
         }
     } catch (error) {
-        console.error("Error en registro inicial:", error);
-        alert("Error de Conexión: " + error.message);
+        console.error("Error en INSERT inicial:", error);
+        alert("Error de DB: " + error.message);
     }
 }
 
 /**
- * Carga el HTML y activa la interactividad de los componentes
+ * Carga de HTML y activación de interactividad
  */
 async function loadNextStep() {
     const viewport = document.getElementById('app-viewport');
     const nextFile = state.steps[state.currentStep];
 
-    if (!nextFile) return;
+    if (!nextFile) {
+        console.log("No hay más pasos definidos.");
+        return;
+    }
 
     try {
+        console.log("Cargando archivo:", nextFile);
         const response = await fetch(nextFile);
-        if (!response.ok) throw new Error('No se encontró ' + nextFile);
+        
+        if (!response.ok) {
+            throw new Error(`Archivo no encontrado: ${nextFile}. Revisa si el archivo existe en el repositorio.`);
+        }
         
         const html = await response.text();
         viewport.innerHTML = html;
 
-        // --- RE-INICIALIZACIÓN ---
+        // Re-inicializar Lucide
         if (window.lucide) lucide.createIcons();
 
-        // Activación de Pills
+        // Re-inicializar Pills
         const pills = viewport.querySelectorAll('.pill');
         pills.forEach(pill => {
             pill.onclick = function() {
@@ -86,15 +100,22 @@ async function loadNextStep() {
         state.currentStep++;
 
     } catch (error) {
-        console.error("Error cargando paso:", error);
+        console.error("Error en loadNextStep:", error);
+        viewport.innerHTML = `<div class="card"><p style="color:red;">Error 404: No se encontró el archivo <b>${nextFile}</b>. Crea el archivo para continuar.</p></div>`;
     }
 }
 
 /**
- * Sincroniza datos con Supabase
+ * Sincronización con la DB (UPDATE)
  */
 async function handleStepSave(data) {
-    console.log("Intentando actualizar lote:", state.formData.lote_id);
+    if (!state.formData.lote_id) {
+        alert("Error: No hay un ID de lote activo.");
+        return;
+    }
+
+    console.log("Actualizando Lote ID:", state.formData.lote_id, "con datos:", data);
+
     try {
         const { error } = await supabaseClient
             .from('lotes')
@@ -103,17 +124,17 @@ async function handleStepSave(data) {
 
         if (error) throw error;
 
-        console.log("Datos sincronizados con éxito.");
+        console.log("Sincronización exitosa.");
         loadNextStep();
 
     } catch (error) {
-        console.error("Error al actualizar:", error.message);
-        alert("No se pudo guardar: " + error.message);
+        console.error("Error en UPDATE:", error.message);
+        alert("Error al guardar: " + error.message);
     }
 }
 
 /**
- * Captura masiva de batch.html
+ * Recolector de datos para batch.html
  */
 window.submitBatchForm = function() {
     const getVal = (id, fallback) => {
@@ -128,18 +149,17 @@ window.submitBatchForm = function() {
         return active ? active.dataset.val : null;
     };
 
-    // Construcción del objeto de datos
     const formData = {
-        nombre_del_lote: getVal('nombre_del_lote', 'Nuevo Lote'),
-        estado_del_lote: getActivePill('estado_del_lote') || 'activo',
+        nombre_del_lote: getVal('nombre_del_lote', 'Lote Nuevo'),
+        estado_del_lote: getActivePill('estado_del_lote') || 'active',
         variedad: getActivePill('variedad'),
         tipo_de_cultivo: getActivePill('tipo_de_cultivo'),
-        cantidad_de_plantas: parseInt(getVal('cantidad_de_plantas', 0)),
+        cantidad_de_plantas: parseInt(getVal('cantidad_de_plantas', 0)) || 0,
         genetica: getVal('genetica', ''),
         banco: getVal('banco', ''),
         predominancia_genetica: getActivePill('predominancia_genetica'),
-        thc_esperado: parseFloat(getVal('thc_esperado', 0)),
-        cbd_esperado: parseFloat(getVal('cbd_esperado', 0)),
+        thc_esperado: parseFloat(getVal('thc_esperado', 0)) || 0,
+        cbd_esperado: parseFloat(getVal('cbd_esperado', 0)) || 0,
         fecha_de_germinacion_esqueje: getVal('fecha_de_germinacion_esqueje', null) || null
     };
 
