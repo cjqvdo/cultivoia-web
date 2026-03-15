@@ -1,5 +1,5 @@
 /**
- * app.js - Cultivo IA v4.0
+ * app.js - Cultivo IA v4.1
  * Master Orchestrator: Lots, Infrastructure, and Supplies
  */
 
@@ -11,16 +11,17 @@ const state = {
 };
 
 /**
- * Initializes the onboarding process and creates the Lot in Supabase
+ * Initializes the onboarding process
  */
 async function startOnboarding(type) {
     state.environment = type;
     
-    // Hide initial branding
+    // UI Cleanup
     const branding = document.getElementById('header-branding');
     if (branding) branding.style.display = 'none';
 
     try {
+        // Create the Lot first
         const { data, error } = await supabaseClient
             .from('lotes')
             .insert([{ 
@@ -34,44 +35,57 @@ async function startOnboarding(type) {
         
         if (data && data.length > 0) {
             state.formData.lote_id = data[0].lote_id;
-            loadNextStep();
+            // Reiniciamos el contador para asegurar que empiece en batch.html
+            state.currentStep = 0; 
+            await loadNextStep();
         }
     } catch (e) { 
-        alert("Initialization Error: " + e.message); 
+        console.error("Initialization Error:", e);
+        alert("Error creating record: " + e.message); 
     }
 }
 
 /**
- * Fetches and injects the next HTML component into the viewport
+ * Fetches and injects the next HTML component
  */
 async function loadNextStep() {
     const viewport = document.getElementById('app-viewport');
+    if (!viewport) return;
+
     const nextFile = state.steps[state.currentStep];
-    
-    if (!nextFile) return;
+    console.log(`Loading step ${state.currentStep}: ${nextFile}`); // Debug log
+
+    if (!nextFile) {
+        console.log("No more steps defined.");
+        return;
+    }
 
     try {
         const response = await fetch(nextFile);
-        if (!response.ok) throw new Error(`Could not load ${nextFile}`);
+        if (!response.ok) throw new Error(`HTTP Error! Status: ${response.status} - File: ${nextFile}`);
         
-        viewport.innerHTML = await response.text();
+        const htmlContent = await response.text();
+        viewport.innerHTML = htmlContent;
         
-        // Clean up any extra branding from the component
+        // Post-load initialization
         const extraBranding = viewport.querySelector('.branding-to-remove');
         if (extraBranding) extraBranding.remove();
 
         if (window.lucide) lucide.createIcons();
         
         initPillInteractions(viewport);
+        
+        // Increment after successful load
         state.currentStep++;
         window.scrollTo(0, 0);
     } catch (e) { 
-        console.error("Step Loading Error:", e); 
+        console.error("Step Loading Error:", e);
+        alert("Error loading the next screen. Check console for details.");
     }
 }
 
 /**
- * Global logic for pill selection (UI/UX)
+ * Global logic for pill selection
  */
 function initPillInteractions(container) {
     const pills = container.querySelectorAll('.pill');
@@ -87,11 +101,11 @@ function initPillInteractions(container) {
 }
 
 /**
- * Universal save function for all steps
+ * Universal save function
  */
 async function handleStepSave(data, tableName = 'lotes') {
     if (!state.formData.lote_id) {
-        alert("Error: No active Batch ID found.");
+        alert("Session error: Batch ID not found.");
         return;
     }
 
@@ -101,8 +115,7 @@ async function handleStepSave(data, tableName = 'lotes') {
             query = supabaseClient.from('infraestructura')
                 .upsert({ lote_id: state.formData.lote_id, ...data }, { onConflict: 'lote_id' });
         } else if (tableName === 'insumos') {
-            // Supplies are linked via lote_id if your schema allows it, 
-            // otherwise they are global inventory items.
+            // Link supply to the current lot
             query = supabaseClient.from('insumos').insert([{ ...data, lote_id: state.formData.lote_id }]);
         } else {
             query = supabaseClient.from('lotes')
@@ -113,15 +126,16 @@ async function handleStepSave(data, tableName = 'lotes') {
         const { error } = await query;
         if (error) throw error;
 
-        console.log(`Successful save in [${tableName}]`);
-        loadNextStep();
+        console.log(`Data saved successfully to ${tableName}`);
+        await loadNextStep(); // Move to next screen
     } catch (e) { 
-        alert("Save Error: " + e.message); 
+        console.error("Save Error:", e);
+        alert("Database error: " + e.message); 
     }
 }
 
 /**
- * FORM SUBMISSIONS
+ * FORM SUBMISSIONS - Interfaz con el HTML
  */
 
 window.submitBatchForm = function() {
@@ -172,6 +186,6 @@ window.submitSuppliesForm = function() {
         aplicacion: getActivePill('aplicación'),
         incompatibilidad: getVal('incompatibilidad'),
         stock: parseFloat(getVal('existencias')) || 0,
-        unidad_de_medida: getActivePill('unidad_medida') // Captura el valor de la pill (ml, gr, etc.)
+        unidad_de_medida: getActivePill('unidad_medida') 
     }, 'insumos');
 };
