@@ -193,19 +193,22 @@
 
             <div class="section-card">
                 <h2 class="section-title"><i data-lucide="box"></i> Inventory</h2>
-                <div class="grid-2">
-                    <div class="field">
-                        <label class="label">EXISTENCE</label>
-                        <input type="number" step="0.01" id="existencias" class="input-h" placeholder="0.00">
-                    </div>
-                    <div class="field">
-                        <label class="label">UNIT</label>
-                        <input type="text" id="unidad_de_medida" class="input-h" placeholder="ml, gr, etc.">
+                <div class="field">
+                    <label class="label">EXISTENCE</label>
+                    <input type="number" step="0.01" id="existencias" class="input-h" placeholder="0.00">
+                </div>
+                <div class="field">
+                    <label class="label">UNIT OF MEASURE</label>
+                    <div class="pill-group" data-id="unidad_medida">
+                        <div class="pill active" data-val="ml">ml</div>
+                        <div class="pill" data-val="gr">gr</div>
+                        <div class="pill" data-val="oz">oz</div>
+                        <div class="pill" data-val="gal">gal</div>
                     </div>
                 </div>
             </div>
 
-            <button type="button" class="btn-primary" onclick="submitSuppliesForm()">Save Supply</button>
+            <button type="button" class="btn-primary" onclick="handleSave()">Save Supply</button>
         </form>
     </div>
 
@@ -237,10 +240,10 @@
                 aplicación: getActivePill('aplicación'),
                 incompatibilidad: document.getElementById('incompatibilidad').value,
                 existencias: parseFloat(document.getElementById('existencias').value) || 0,
-                unidad_de_medida: document.getElementById('unidad_de_medida').value
+                unidad_de_medida: getActivePill('unidad_medida')
             };
             
-            // Notificación al orquestador central app.js
+            // Notification to central orchestrator
             if (typeof handleStepSave === 'function') {
                 handleStepSave(payload);
             } else {

@@ -220,15 +220,28 @@
 
             <div class="section-card">
                 <h2 class="section-title"><i data-lucide="trending-up"></i> Expectations</h2>
+                
+                <div class="field">
+                    <label class="label">EXPECTED SIZE (INDOOR)</label>
+                    <div class="pill-group" data-id="tamano_esperado_indoor">
+                        <div class="pill" data-val="S">S</div>
+                        <div class="pill active" data-val="M">M</div>
+                        <div class="pill" data-val="L">L</div>
+                        <div class="pill" data-val="XL">XL</div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">EXPECTED SIZE (OUTDOOR)</label>
+                    <div class="pill-group" data-id="tamano_esperado_outdoor">
+                        <div class="pill" data-val="S">S</div>
+                        <div class="pill active" data-val="M">M</div>
+                        <div class="pill" data-val="L">L</div>
+                        <div class="pill" data-val="XL">XL</div>
+                    </div>
+                </div>
+
                 <div class="grid-2">
-                    <div class="field">
-                        <label class="label">INDOOR SIZE</label>
-                        <input type="text" id="tamano_esperado_indoor" class="input-h" placeholder="S-M-L">
-                    </div>
-                    <div class="field">
-                        <label class="label">OUTDOOR SIZE</label>
-                        <input type="text" id="tamano_esperado_outdoor" class="input-h" placeholder="S-M-L">
-                    </div>
                     <div class="field">
                         <label class="label">INDOOR YIELD</label>
                         <input type="text" id="produccion_esperada_indoor" class="input-h" placeholder="g/m2">
@@ -331,7 +344,7 @@
                 </div>
             </div>
 
-			<button type="button" class="btn-primary" onclick="window.submitBatchForm()">Continuar</button>
+            <button type="button" class="btn-primary" onclick="submitForm()">Continuar</button>
         </form>
     </div>
 
@@ -389,8 +402,8 @@
                 proveedor: document.getElementById('proveedor').value,
                 banco: document.getElementById('banco').value,
                 predominancia_genetica: getActivePill('predominancia_genetica'),
-                tamano_esperado_indoor: document.getElementById('tamano_esperado_indoor').value,
-                tamano_esperado_outdoor: document.getElementById('tamano_esperado_outdoor').value,
+                tamano_esperado_indoor: getActivePill('tamano_esperado_indoor'),
+                tamano_esperado_outdoor: getActivePill('tamano_esperado_outdoor'),
                 produccion_esperada_indoor: document.getElementById('produccion_esperada_indoor').value,
                 produccion_esperada_outdoor: document.getElementById('produccion_esperada_outdoor').value,
                 thc_esperado: document.getElementById('thc_esperado').value,

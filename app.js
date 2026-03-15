@@ -1,51 +1,78 @@
 /**
- * app.js - Orquestador Maestro de Cultivo IA
- * SOPORTE COMPLETO: Lotes, Infraestructura e Insumos
+ * app.js - Cultivo IA v4.0
+ * Master Orchestrator: Lots, Infrastructure, and Supplies
  */
 
 const state = {
     environment: null,
     currentStep: 0,
-    steps: ['batch.html', 'infrastructure.html', 'supplies.html', 'setup_detail'],
+    steps: ['batch.html', 'infrastructure.html', 'supplies.html', 'dashboard.html'],
     formData: { lote_id: null } 
 };
 
+/**
+ * Initializes the onboarding process and creates the Lot in Supabase
+ */
 async function startOnboarding(type) {
-    if (state.formData.lote_id) { loadNextStep(); return; }
     state.environment = type;
-    state.steps[3] = (type === 'indoor') ? 'indoor.html' : 'outdoor.html';
+    
+    // Hide initial branding
+    const branding = document.getElementById('header-branding');
+    if (branding) branding.style.display = 'none';
+
     try {
         const { data, error } = await supabaseClient
             .from('lotes')
             .insert([{ 
                 espacio: type,
-                nombre_del_lote: `Lote ${type.toUpperCase()} - ${new Date().toLocaleDateString()}`,
+                nombre_del_lote: `Batch ${type.toUpperCase()} - ${new Date().toLocaleDateString()}`,
                 estado_del_lote: 'active' 
             }])
             .select();
+
         if (error) throw error;
+        
         if (data && data.length > 0) {
             state.formData.lote_id = data[0].lote_id;
             loadNextStep();
         }
-    } catch (error) { alert("Error al iniciar: " + error.message); }
+    } catch (e) { 
+        alert("Initialization Error: " + e.message); 
+    }
 }
 
+/**
+ * Fetches and injects the next HTML component into the viewport
+ */
 async function loadNextStep() {
     const viewport = document.getElementById('app-viewport');
     const nextFile = state.steps[state.currentStep];
+    
     if (!nextFile) return;
+
     try {
         const response = await fetch(nextFile);
-        if (!response.ok) throw new Error(`404: ${nextFile}`);
+        if (!response.ok) throw new Error(`Could not load ${nextFile}`);
+        
         viewport.innerHTML = await response.text();
+        
+        // Clean up any extra branding from the component
+        const extraBranding = viewport.querySelector('.branding-to-remove');
+        if (extraBranding) extraBranding.remove();
+
         if (window.lucide) lucide.createIcons();
+        
         initPillInteractions(viewport);
         state.currentStep++;
         window.scrollTo(0, 0);
-    } catch (error) { console.error(error); }
+    } catch (e) { 
+        console.error("Step Loading Error:", e); 
+    }
 }
 
+/**
+ * Global logic for pill selection (UI/UX)
+ */
 function initPillInteractions(container) {
     const pills = container.querySelectorAll('.pill');
     pills.forEach(pill => {
@@ -59,50 +86,63 @@ function initPillInteractions(container) {
     });
 }
 
+/**
+ * Universal save function for all steps
+ */
 async function handleStepSave(data, tableName = 'lotes') {
-    if (!state.formData.lote_id) return;
+    if (!state.formData.lote_id) {
+        alert("Error: No active Batch ID found.");
+        return;
+    }
+
     try {
         let query;
         if (tableName === 'infraestructura') {
-            query = supabaseClient.from('infraestructura').upsert({ lote_id: state.formData.lote_id, ...data }, { onConflict: 'lote_id' });
+            query = supabaseClient.from('infraestructura')
+                .upsert({ lote_id: state.formData.lote_id, ...data }, { onConflict: 'lote_id' });
         } else if (tableName === 'insumos') {
-            query = supabaseClient.from('insumos').insert([data]);
+            // Supplies are linked via lote_id if your schema allows it, 
+            // otherwise they are global inventory items.
+            query = supabaseClient.from('insumos').insert([{ ...data, lote_id: state.formData.lote_id }]);
         } else {
-            query = supabaseClient.from('lotes').update(data).eq('lote_id', state.formData.lote_id);
+            query = supabaseClient.from('lotes')
+                .update(data)
+                .eq('lote_id', state.formData.lote_id);
         }
+
         const { error } = await query;
         if (error) throw error;
-        console.log(`Guardado exitoso en [${tableName}]`);
+
+        console.log(`Successful save in [${tableName}]`);
         loadNextStep();
-    } catch (error) { alert("Error de guardado: " + error.message); }
+    } catch (e) { 
+        alert("Save Error: " + e.message); 
+    }
 }
+
+/**
+ * FORM SUBMISSIONS
+ */
 
 window.submitBatchForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
-    const getActivePill = (id) => {
-        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
-        return active ? active.dataset.val : null;
-    };
+    const getActivePill = (id) => document.querySelector(`.pill-group[data-id="${id}"] .pill.active`)?.dataset.val;
+
     handleStepSave({
         nombre_del_lote: getVal('nombre_del_lote'),
-        estado_del_lote: getActivePill('estado_del_lote') || 'active',
         variedad: getActivePill('variedad'),
-        tipo_de_cultivo: getActivePill('tipo_de_cultivo'),
         cantidad_de_plantas: parseInt(getVal('cantidad_de_plantas')) || 0,
         genetica: getVal('genetica'),
         banco: getVal('banco'),
         predominancia_genetica: getActivePill('predominancia_genetica'),
-        thc_esperado: parseFloat(getVal('thc_esperado')) || 0,
-        cbd_esperado: parseFloat(getVal('cbd_esperado')) || 0
+        tamaño_esperado: getActivePill('tamaño_esperado') 
     }, 'lotes');
 };
 
 window.submitInfraForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
-    const getActivePill = (id) => {
-        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
-        return active ? active.dataset.val : null;
-    };
+    const getActivePill = (id) => document.querySelector(`.pill-group[data-id="${id}"] .pill.active`)?.dataset.val;
+
     handleStepSave({
         lugar_cultivo: getActivePill('lugar_cultivo'),
         ancho: parseFloat(getVal('ancho')) || 0,
@@ -120,10 +160,8 @@ window.submitInfraForm = function() {
 
 window.submitSuppliesForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
-    const getActivePill = (id) => {
-        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
-        return active ? active.dataset.val : null;
-    };
+    const getActivePill = (id) => document.querySelector(`.pill-group[data-id="${id}"] .pill.active`)?.dataset.val;
+
     handleStepSave({
         nombre: getVal('nombre'),
         marca: getVal('marca'),
@@ -134,6 +172,6 @@ window.submitSuppliesForm = function() {
         aplicacion: getActivePill('aplicación'),
         incompatibilidad: getVal('incompatibilidad'),
         stock: parseFloat(getVal('existencias')) || 0,
-        unidad_de_medida: getVal('unidad_de_medida')
+        unidad_de_medida: getActivePill('unidad_medida') // Captura el valor de la pill (ml, gr, etc.)
     }, 'insumos');
 };
