@@ -1,6 +1,6 @@
 /**
- * app.js - Cultivo IA
- * FIX: Agregado soporte para submitForm y mapeo de IDs
+ * app.js - Cultivo IA v4.3
+ * PROTECCIÓN TOTAL Y DEPURACIÓN ACTIVA
  */
 
 const state = {
@@ -10,8 +10,11 @@ const state = {
     formData: { lote_id: null } 
 };
 
+// Exponer el estado a la consola para debug manual
+window.cultivoState = state;
+
 async function startOnboarding(type) {
-    if (state.formData.lote_id) { loadNextStep(); return; }
+    console.log("Iniciando onboarding para:", type);
     state.environment = type;
     state.steps[3] = (type === 'indoor') ? 'indoor.html' : 'outdoor.html';
     
@@ -20,18 +23,20 @@ async function startOnboarding(type) {
             .from('lotes')
             .insert([{ 
                 espacio: type,
-                nombre_del_lote: `Batch ${type.toUpperCase()} - ${new Date().toLocaleDateString()}`,
+                nombre_del_lote: `Lote ${type.toUpperCase()} - ${new Date().toLocaleDateString()}`,
                 estado_del_lote: 'active' 
             }])
             .select();
 
         if (error) throw error;
+        
         if (data && data.length > 0) {
             state.formData.lote_id = data[0].lote_id;
-            loadNextStep();
+            console.log("Lote creado con ID:", state.formData.lote_id);
+            await loadNextStep();
         }
-    } catch (error) { 
-        alert("Error at start: " + error.message); 
+    } catch (err) { 
+        alert("ERROR AL INICIAR: " + err.message); 
     }
 }
 
@@ -39,21 +44,27 @@ async function loadNextStep() {
     const viewport = document.getElementById('app-viewport');
     const nextFile = state.steps[state.currentStep];
     
-    if (!nextFile) return;
+    console.log("Cargando paso:", state.currentStep, "Archivo:", nextFile);
+
+    if (!nextFile) {
+        alert("Fin del flujo de configuración.");
+        return;
+    }
 
     try {
         const response = await fetch(nextFile);
-        if (!response.ok) throw new Error(`404: ${nextFile}`);
+        if (!response.ok) throw new Error(`Error HTTP ${response.status} en ${nextFile}`);
         
-        viewport.innerHTML = await response.text();
+        const html = await response.text();
+        viewport.innerHTML = html;
         
         if (window.lucide) lucide.createIcons();
         initPillInteractions(viewport);
         
         state.currentStep++;
         window.scrollTo(0, 0);
-    } catch (error) { 
-        console.error("Load Error:", error);
+    } catch (err) { 
+        alert("ERROR AL CARGAR PANTALLA: " + err.message);
     }
 }
 
@@ -70,23 +81,13 @@ function initPillInteractions(container) {
     });
 }
 
-/**
- * PUENTE CRÍTICO: Esta función mapea el onclick="submitForm()" de tus HTML
- * a las funciones específicas de guardado.
- */
-window.submitForm = function() {
-    // Si estamos en el primer paso (después de loadNextStep, currentStep ya es 1)
-    if (state.currentStep === 1) {
-        window.submitBatchForm();
-    } else if (state.currentStep === 2) {
-        window.submitInfraForm();
-    } else if (state.currentStep === 3) {
-        window.submitSuppliesForm();
+// Función global que unifica el guardado
+async function handleStepSave(data, tableName) {
+    if (!state.formData.lote_id) {
+        alert("ERROR: No hay un ID de lote activo. Reinicia el proceso.");
+        return;
     }
-};
 
-async function handleStepSave(data, tableName = 'lotes') {
-    if (!state.formData.lote_id) return;
     try {
         let query;
         if (tableName === 'infraestructura') {
@@ -100,15 +101,33 @@ async function handleStepSave(data, tableName = 'lotes') {
         const { error } = await query;
         if (error) throw error;
         
-        loadNextStep();
-    } catch (error) { 
-        alert("Save Error: " + error.message); 
+        console.log("Guardado exitoso en:", tableName);
+        await loadNextStep();
+    } catch (err) { 
+        alert("ERROR AL GUARDAR: " + err.message); 
     }
 }
 
+/**
+ * MAPEOS GLOBALES PARA TUS HTML
+ */
+
+// Si tu botón dice submitForm()
+window.submitForm = function() {
+    console.log("submitForm invocado. Paso actual:", state.currentStep);
+    // Como loadNextStep ya incrementó el step, evaluamos:
+    if (state.currentStep === 1) submitBatchForm();
+    else if (state.currentStep === 2) submitInfraForm();
+    else if (state.currentStep === 3) submitSuppliesForm();
+};
+
+// Si tu botón dice submitBatchForm()
 window.submitBatchForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
-    const getActivePill = (id) => document.querySelector(`.pill-group[data-id="${id}"] .pill.active`)?.dataset.val;
+    const getActivePill = (id) => {
+        const el = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
+        return el ? el.dataset.val : null;
+    };
 
     handleStepSave({
         nombre_del_lote: getVal('nombre_del_lote'),
@@ -122,7 +141,10 @@ window.submitBatchForm = function() {
 
 window.submitInfraForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
-    const getActivePill = (id) => document.querySelector(`.pill-group[data-id="${id}"] .pill.active`)?.dataset.val;
+    const getActivePill = (id) => {
+        const el = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
+        return el ? el.dataset.val : null;
+    };
 
     handleStepSave({
         lugar_cultivo: getActivePill('lugar_cultivo'),
@@ -136,17 +158,15 @@ window.submitInfraForm = function() {
 
 window.submitSuppliesForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
-    const getActivePill = (id) => document.querySelector(`.pill-group[data-id="${id}"] .pill.active`)?.dataset.val;
+    const getActivePill = (id) => {
+        const el = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
+        return el ? el.dataset.val : null;
+    };
 
     handleStepSave({
         nombre: getVal('nombre'),
         marca: getVal('marca'),
         categoria: getActivePill('categorías'),
-        tipo_base: getActivePill('tipo_base'),
-        formato: getActivePill('formato'),
-        uso_principal: getVal('uso_principal'),
-        aplicacion: getActivePill('aplicación'),
-        incompatibilidad: getVal('incompatibilidad'),
         stock: parseFloat(getVal('existencias')) || 0,
         unidad_de_medida: getActivePill('unidad_medida') 
     }, 'insumos');
