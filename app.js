@@ -1,6 +1,6 @@
 /**
  * app.js - Cultivo IA
- * RESTORED TO FUNCTIONAL BASE
+ * FIX: Agregado soporte para submitForm y mapeo de IDs
  */
 
 const state = {
@@ -13,10 +13,8 @@ const state = {
 async function startOnboarding(type) {
     if (state.formData.lote_id) { loadNextStep(); return; }
     state.environment = type;
-    
-    // Solo ajustamos el último paso según el tipo
     state.steps[3] = (type === 'indoor') ? 'indoor.html' : 'outdoor.html';
-
+    
     try {
         const { data, error } = await supabaseClient
             .from('lotes')
@@ -50,8 +48,8 @@ async function loadNextStep() {
         viewport.innerHTML = await response.text();
         
         if (window.lucide) lucide.createIcons();
-        
         initPillInteractions(viewport);
+        
         state.currentStep++;
         window.scrollTo(0, 0);
     } catch (error) { 
@@ -72,6 +70,21 @@ function initPillInteractions(container) {
     });
 }
 
+/**
+ * PUENTE CRÍTICO: Esta función mapea el onclick="submitForm()" de tus HTML
+ * a las funciones específicas de guardado.
+ */
+window.submitForm = function() {
+    // Si estamos en el primer paso (después de loadNextStep, currentStep ya es 1)
+    if (state.currentStep === 1) {
+        window.submitBatchForm();
+    } else if (state.currentStep === 2) {
+        window.submitInfraForm();
+    } else if (state.currentStep === 3) {
+        window.submitSuppliesForm();
+    }
+};
+
 async function handleStepSave(data, tableName = 'lotes') {
     if (!state.formData.lote_id) return;
     try {
@@ -79,7 +92,6 @@ async function handleStepSave(data, tableName = 'lotes') {
         if (tableName === 'infraestructura') {
             query = supabaseClient.from('infraestructura').upsert({ lote_id: state.formData.lote_id, ...data }, { onConflict: 'lote_id' });
         } else if (tableName === 'insumos') {
-            // Aseguramos que el insumo se vincule al lote si es necesario
             query = supabaseClient.from('insumos').insert([{ ...data, lote_id: state.formData.lote_id }]);
         } else {
             query = supabaseClient.from('lotes').update(data).eq('lote_id', state.formData.lote_id);
@@ -88,7 +100,6 @@ async function handleStepSave(data, tableName = 'lotes') {
         const { error } = await query;
         if (error) throw error;
         
-        console.log(`Successful save in [${tableName}]`);
         loadNextStep();
     } catch (error) { 
         alert("Save Error: " + error.message); 
@@ -97,10 +108,7 @@ async function handleStepSave(data, tableName = 'lotes') {
 
 window.submitBatchForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
-    const getActivePill = (id) => {
-        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
-        return active ? active.dataset.val : null;
-    };
+    const getActivePill = (id) => document.querySelector(`.pill-group[data-id="${id}"] .pill.active`)?.dataset.val;
 
     handleStepSave({
         nombre_del_lote: getVal('nombre_del_lote'),
@@ -108,18 +116,13 @@ window.submitBatchForm = function() {
         cantidad_de_plantas: parseInt(getVal('cantidad_de_plantas')) || 0,
         genetica: getVal('genetica'),
         banco: getVal('banco'),
-        predominancia_genetica: getActivePill('predominancia_genetica'),
-        thc_esperado: parseFloat(getVal('thc_esperado')) || 0,
-        cbd_esperado: parseFloat(getVal('cbd_esperado')) || 0
+        predominancia_genetica: getActivePill('predominancia_genetica')
     }, 'lotes');
 };
 
 window.submitInfraForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
-    const getActivePill = (id) => {
-        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
-        return active ? active.dataset.val : null;
-    };
+    const getActivePill = (id) => document.querySelector(`.pill-group[data-id="${id}"] .pill.active`)?.dataset.val;
 
     handleStepSave({
         lugar_cultivo: getActivePill('lugar_cultivo'),
@@ -127,21 +130,13 @@ window.submitInfraForm = function() {
         largo: parseFloat(getVal('largo')) || 0,
         alto: parseFloat(getVal('alto')) || 0,
         sustrato: getVal('sustrato'),
-        iluminacion: getVal('iluminacion'),
-        control_humedad: getVal('control_humedad'),
-        control_temperatura: getVal('control_temperatura'),
-        movimiento_aire: getVal('movimiento_aire'),
-        iny_ext_aire: getVal('iny_ext_aire'),
-        observaciones_infraestructura: getVal('observaciones_infraestructura')
+        iluminacion: getVal('iluminacion')
     }, 'infraestructura');
 };
 
 window.submitSuppliesForm = function() {
     const getVal = (id) => document.getElementById(id)?.value || null;
-    const getActivePill = (id) => {
-        const active = document.querySelector(`.pill-group[data-id="${id}"] .pill.active`);
-        return active ? active.dataset.val : null;
-    };
+    const getActivePill = (id) => document.querySelector(`.pill-group[data-id="${id}"] .pill.active`)?.dataset.val;
 
     handleStepSave({
         nombre: getVal('nombre'),
@@ -153,6 +148,6 @@ window.submitSuppliesForm = function() {
         aplicacion: getActivePill('aplicación'),
         incompatibilidad: getVal('incompatibilidad'),
         stock: parseFloat(getVal('existencias')) || 0,
-        unidad_de_medida: getActivePill('unidad_medida') // CORRECCIÓN PARA LAS PILLS
+        unidad_de_medida: getActivePill('unidad_medida') 
     }, 'insumos');
 };
